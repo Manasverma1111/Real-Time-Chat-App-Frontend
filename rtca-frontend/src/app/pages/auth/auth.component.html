@@ -1,0 +1,17 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="header">
+      <div class="logo">C</div>
+      <h1>ConnectHub</h1>
+      <p>Simple and secure chat experience</p>
+    </div>
+
+    <div class="toggle">
+      <button (click)="switchMode('login')" [class.active]="mode === 'login'">Sign In</button>
+      <button (click)="switchMode('signup')" [class.active]="mode === 'signup'">Sign Up</button>
+    </div>
+
+    <app-login-form *ngIf="mode === 'login'"></app-login-form>
+    <app-signup-form *ngIf="mode === 'signup'"></app-signup-form>
+  </div>
+</div>
