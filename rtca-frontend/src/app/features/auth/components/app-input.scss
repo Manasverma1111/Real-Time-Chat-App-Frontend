@@ -1,0 +1,60 @@
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+input {
+  width: 100%;
+  box-sizing: border-box; // ✅ MOST IMPORTANT FIX
+  padding: 10px 12px;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  background: #fafafa;
+  color: #1a1a2e;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+input:focus {
+  border-color: rgba(0, 0, 0, 0.35);
+  background: #fff;
+}
+
+/* Only password input gets extra padding */
+input[type='password'],
+input[type='text'][data-password='true'] {
+  padding-right: 40px;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+// .input-wrapper {
+//   position: relative;
+
+//   input {
+//     padding-right: 40px;
+//   }
+
+//   button {
+//     position: absolute;
+//     right: 10px;
+//     top: 50%;
+//     transform: translateY(-50%);
+//     border: none;
+//     background: transparent;
+//     cursor: pointer;
+//   }
+// }

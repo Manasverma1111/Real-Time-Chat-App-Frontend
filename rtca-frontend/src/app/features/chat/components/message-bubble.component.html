@@ -1,0 +1,17 @@
+<div [style.display]="'flex'" [style.justifyContent]="message?.isOwn ? 'flex-end' : 'flex-start'">
+  <div
+    style="max-width: 65%; padding: 10px; border-radius: 16px"
+    [style.background]="message?.isOwn ? 'linear-gradient(135deg,#8b5cf6,#6366f1)' : '#fff'"
+    [style.color]="message?.isOwn ? '#fff' : '#111827'"
+  >
+    <div *ngIf="!message?.isOwn" style="font-size: 12px">
+      {{ message?.senderName }}
+    </div>
+
+    <div>{{ message?.text }}</div>
+
+    <div style="font-size: 10px; text-align: right">
+      {{ message?.timestamp }}
+    </div>
+  </div>
+</div>

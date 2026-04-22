@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
 @Injectable({
   providedIn: 'root',
@@ -9,21 +8,24 @@ export class SocketService {
   private stompClient: Client | null = null;
 
   connect(token: string, onConnect?: () => void, onError?: (err: any) => void) {
-    const socketUrl = 'http://localhost:8083/ws';
+    const socketUrl = 'ws://localhost:8083/ws'; // ✅ IMPORTANT: ws:// not http://
 
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS(socketUrl),
+      brokerURL: socketUrl, // ✅ use this instead of SockJS
       reconnectDelay: 5000,
       debug: (str) => console.log('STOMP:', str),
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+
       onConnect: () => {
         console.log('WebSocket connected');
         onConnect?.();
       },
+
       onStompError: (frame) => {
         console.error('STOMP error:', frame);
         onError?.(frame);
       },
+
       onWebSocketError: (error) => {
         console.error('WebSocket error:', error);
         onError?.(error);

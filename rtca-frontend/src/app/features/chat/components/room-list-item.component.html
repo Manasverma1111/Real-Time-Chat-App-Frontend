@@ -1,0 +1,26 @@
+<button
+  (click)="onClick()"
+  style="width: 100%; padding: 12px; display: flex; gap: 10px"
+  [style.background]="isActive ? '#eef2ff' : '#fff'"
+>
+  <div
+    style="
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ddd;
+    "
+  >
+    {{ initials }}
+  </div>
+
+  <div style="flex: 1">
+    <div>{{ room?.name }}</div>
+    <div style="font-size: 12px; color: #666">
+      {{ room?.lastMessage || 'No messages yet' }}
+    </div>
+  </div>
+</button>

@@ -1,1 +1,265 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* ── Auth page shell ── */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f3f0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ✅ FIX: enforce vertical layout */
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  background: #ffffff;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 2.25rem 2rem 2rem;
+
+  display: flex; /* ✅ important */
+  flex-direction: column; /* ✅ prevents overlap */
+}
+
+/* ── Brand ── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 1.75rem;
+}
+
+.brand-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #1a1a2e;
+  color: #fff;
+  font-family: 'Instrument Serif', serif;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: #1a1a2e;
+}
+
+/* ── Tabs ── */
+.auth-tabs {
+  display: flex;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 9px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -0.5px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #999;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.tab-btn.active {
+  color: #1a1a2e;
+  font-weight: 500;
+  border-bottom-color: #1a1a2e;
+}
+
+/* ── Auth body (FIXED: no overlap) ── */
+.auth-body {
+  width: 100%;
+}
+
+/* ── Subheading ── */
+.auth-subheading {
+  font-size: 13px;
+  font-weight: 300;
+  color: #888;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Google button ── */
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 0.5px solid rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  color: #1a1a2e;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 1.25rem;
+}
+
+.google-btn:hover {
+  background: #f5f5f3;
+}
+
+/* ── Divider ── */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.divider-line {
+  flex: 1;
+  height: 0.5px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.divider-label {
+  font-size: 11px;
+  color: #bbb;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Fields ── */
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 6px;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.forgot-link {
+  font-size: 11px;
+  color: #aaa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Feedback ── */
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #c0392b;
+  background: #fdf2f2;
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+}
+
+.auth-success {
+  font-size: 12.5px;
+  color: #1a7a4a;
+  background: #edfaf3;
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+}
+
+/* ── Submit button ── */
+.submit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+/* ── Spinner ── */
+.btn-spinner {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Input styling ── */
+/* app-input input,
+.auth-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  background: #fafaf8;
+  color: #1a1a2e;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+app-input input:focus,
+.auth-input:focus {
+  border-color: rgba(0, 0, 0, 0.3);
+  background: #fff;
+} */

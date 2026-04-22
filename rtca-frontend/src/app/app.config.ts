@@ -1,21 +1,18 @@
-// import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-// import { provideRouter } from '@angular/router';
-
-// import { routes } from './app.routes';
-// import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-
-// export const appConfig: ApplicationConfig = {
-//   providers: [
-//     provideBrowserGlobalErrorListeners(),
-//     provideRouter(routes), provideClientHydration(withEventReplay())
-//   ]
-// };
-
-import { ApplicationConfig } from '@angular/core';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { provideRouter } from '@angular/router';
-import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { importProvidersFrom } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes), provideHttpClient()],
+import { routes } from './app.routes';
+
+export const appConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(
+      withFetch(), // ✅ add this
+      withInterceptors([authInterceptor]),
+    ),
+    importProvidersFrom(FormsModule, ReactiveFormsModule),
+  ],
 };

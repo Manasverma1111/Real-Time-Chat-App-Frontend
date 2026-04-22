@@ -1,17 +1,24 @@
-<div class="auth-container">
+<div class="auth-page">
   <div class="auth-card">
-    <div class="header">
-      <div class="logo">C</div>
-      <h1>ConnectHub</h1>
-      <p>Simple and secure chat experience</p>
+    <div class="brand">
+      <div class="brand-dot">C</div>
+      <span class="brand-name">ConnectHub</span>
     </div>
 
-    <div class="toggle">
-      <button (click)="switchMode('login')" [class.active]="mode === 'login'">Sign In</button>
-      <button (click)="switchMode('signup')" [class.active]="mode === 'signup'">Sign Up</button>
+    <div class="auth-tabs">
+      <button
+        class="tab-btn"
+        routerLink="/login"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Sign in
+      </button>
+
+      <button class="tab-btn" routerLink="/register" routerLinkActive="active">Sign up</button>
     </div>
 
-    <app-login-form *ngIf="mode === 'login'"></app-login-form>
-    <app-signup-form *ngIf="mode === 'signup'"></app-signup-form>
+    <!-- ✅ THIS REPLACES ngSwitch -->
+    <router-outlet></router-outlet>
   </div>
 </div>

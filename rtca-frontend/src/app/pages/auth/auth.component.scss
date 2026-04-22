@@ -1,0 +1,30 @@
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f7f7f5;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  border-bottom: 2px solid #000;
+}
