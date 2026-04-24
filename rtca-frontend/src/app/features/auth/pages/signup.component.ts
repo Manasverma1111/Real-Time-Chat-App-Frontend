@@ -70,6 +70,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputComponent],
   templateUrl: './signup.component.html',
+  styleUrls: ['./auth-pages.scss'],
 })
 export class SignupComponent {
   loading = false;

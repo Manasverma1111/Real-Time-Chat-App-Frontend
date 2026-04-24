@@ -1,60 +1,106 @@
 .input-wrapper {
   position: relative;
-  width: 100%;
+  display: flex;
+  align-items: center;
 }
 
-input {
+.input-wrapper input {
   width: 100%;
-  box-sizing: border-box; // ✅ MOST IMPORTANT FIX
-  padding: 10px 12px;
-  border: 0.5px solid rgba(0, 0, 0, 0.12);
-  border-radius: 10px;
+  padding: 11px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 11px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
-  background: #fafafa;
+  font-size: 14px;
+  font-weight: 400;
+  background: #fafaf8;
   color: #1a1a2e;
   outline: none;
   transition:
     border-color 0.15s,
-    background 0.15s;
+    background 0.15s,
+    box-shadow 0.15s;
+  box-sizing: border-box;
 }
 
-input:focus {
-  border-color: rgba(0, 0, 0, 0.35);
+.input-wrapper input::placeholder {
+  color: #aaa;
+  font-weight: 300;
+}
+
+.input-wrapper input:focus {
+  border-color: rgba(26, 26, 46, 0.4);
   background: #fff;
+  box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.06);
 }
 
-/* Only password input gets extra padding */
-input[type='password'],
-input[type='text'][data-password='true'] {
-  padding-right: 40px;
+.input-wrapper input:hover:not(:focus) {
+  border-color: rgba(0, 0, 0, 0.25);
 }
 
 .eye-btn {
   position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  background: none;
   border: none;
-  background: transparent;
   cursor: pointer;
-  font-size: 16px;
+  padding: 4px;
+  font-size: 15px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.eye-btn:hover {
+  color: #1a1a2e;
+}
+
+.input-wrapper input[type='password'],
+.input-wrapper input[type='text'].has-eye {
+  padding-right: 42px;
 }
 
 // .input-wrapper {
 //   position: relative;
+//   width: 100%;
+// }
 
-//   input {
-//     padding-right: 40px;
-//   }
+// input {
+//   width: 100%;
+//   box-sizing: border-box; // ✅ MOST IMPORTANT FIX
+//   padding: 10px 12px;
+//   border: 0.5px solid rgba(0, 0, 0, 0.12);
+//   border-radius: 10px;
+//   font-family: 'DM Sans', sans-serif;
+//   font-size: 13.5px;
+//   background: #fafafa;
+//   color: #1a1a2e;
+//   outline: none;
+//   transition:
+//     border-color 0.15s,
+//     background 0.15s;
+// }
 
-//   button {
-//     position: absolute;
-//     right: 10px;
-//     top: 50%;
-//     transform: translateY(-50%);
-//     border: none;
-//     background: transparent;
-//     cursor: pointer;
-//   }
+// input:focus {
+//   border-color: rgba(0, 0, 0, 0.35);
+//   background: #fff;
+// }
+
+// /* Only password input gets extra padding */
+// input[type='password'],
+// input[type='text'][data-password='true'] {
+//   padding-right: 40px;
+// }
+
+// .eye-btn {
+//   position: absolute;
+//   right: 10px;
+//   top: 50%;
+//   transform: translateY(-50%);
+//   border: none;
+//   background: transparent;
+//   cursor: pointer;
+//   font-size: 16px;
 // }

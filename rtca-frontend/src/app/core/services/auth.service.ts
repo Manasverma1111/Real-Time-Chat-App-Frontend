@@ -23,4 +23,8 @@ export class AuthService {
   getGoogleLoginUrl(): string {
     return `http://localhost:8087/oauth2/authorization/google`;
   }
+
+  logout() {
+    return this.api.post('/auth/logout', {});
+  }
 }

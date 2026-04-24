@@ -3,28 +3,106 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f7f7f5;
+  background: #eeecea;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 520px;
   background: #fff;
-  border-radius: 20px;
-  padding: 2rem;
+  border-radius: 24px;
+  padding: 2.5rem 2.5rem 2.25rem;
+  box-shadow:
+    0 4px 40px rgba(0, 0, 0, 0.09),
+    0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
+/* ── Brand ── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+
+.brand-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #1a1a2e;
+  color: #fff;
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  color: #1a1a2e;
+  letter-spacing: -0.01em;
+}
+
+/* ── Tabs ── */
 .auth-tabs {
   display: flex;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.75rem;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 10px;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #aaa;
   cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .tab-btn.active {
-  border-bottom: 2px solid #000;
+  color: #1a1a2e;
+  font-weight: 500;
+  border-bottom-color: #1a1a2e;
 }
+
+// .auth-page {
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   min-height: 100vh;
+//   background: #f7f7f5;
+// }
+
+// .auth-card {
+//   width: 100%;
+//   max-width: 420px;
+//   background: #fff;
+//   border-radius: 20px;
+//   padding: 2rem;
+// }
+
+// .auth-tabs {
+//   display: flex;
+//   border-bottom: 1px solid #ddd;
+// }
+
+// .tab-btn {
+//   flex: 1;
+//   padding: 10px;
+//   cursor: pointer;
+// }
+
+// .tab-btn.active {
+//   border-bottom: 2px solid #000;
+// }

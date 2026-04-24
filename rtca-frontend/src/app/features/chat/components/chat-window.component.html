@@ -1,9 +1,93 @@
-<div *ngIf="room; else noRoom" style="display: flex; flex-direction: column; height: 100%">
+<div *ngIf="room; else noRoom" class="chat-window">
   <!-- Header -->
   <app-chat-header [room]="room"></app-chat-header>
 
   <!-- Messages -->
-  <div
+  <div class="messages-area">
+    <ng-container *ngIf="messages.length > 0; else emptyState">
+      <app-message-bubble *ngFor="let msg of messages" [message]="msg"></app-message-bubble>
+      <div #scrollEnd></div>
+    </ng-container>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <p class="empty-title">Start the conversation</p>
+        <p class="empty-sub">
+          Say hello in <strong>{{ room?.name }}</strong>
+        </p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Input -->
+  <div class="input-bar">
+    <div class="input-wrapper">
+      <input
+        [(ngModel)]="text"
+        placeholder="Type a message..."
+        class="message-input"
+        (keydown.enter)="send()"
+      />
+      <button class="send-btn" (click)="send()" [disabled]="!text.trim()">
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="22" y1="2" x2="11" y2="13" />
+          <polygon points="22 2 15 22 11 13 2 9 22 2" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<ng-template #noRoom>
+  <div class="no-room">
+    <div class="no-room-icon">
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    </div>
+    <p class="no-room-title">Select a room</p>
+    <p class="no-room-sub">Choose a room from the sidebar to start chatting</p>
+  </div>
+</ng-template>
+
+<!-- <div *ngIf="room; else noRoom" style="display: flex; flex-direction: column; height: 100%"> -->
+<!-- Header -->
+<!-- <app-chat-header [room]="room"></app-chat-header> -->
+
+<!-- Messages -->
+<!-- <div
     style="flex: 1; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px"
   >
     <ng-container *ngIf="messages.length > 0; else emptyState">
@@ -17,10 +101,10 @@
         <p>Start the conversation in {{ room?.name }}</p>
       </div>
     </ng-template>
-  </div>
+  </div> -->
 
-  <!-- Input -->
-  <div style="display: flex; padding: 10px; border-top: 1px solid #ddd">
+<!-- Input -->
+<!-- <div style="display: flex; padding: 10px; border-top: 1px solid #ddd">
     <input
       [(ngModel)]="text"
       placeholder="Type a message..."
@@ -36,24 +120,4 @@
   <div style="display: flex; align-items: center; justify-content: center; height: 100%">
     Select a room to start chatting
   </div>
-</ng-template>
-
-<!-- <div *ngIf="room; else noRoom" style="display: flex; flex-direction: column; height: 100%">
-  <app-chat-header [room]="room"></app-chat-header>
-
-  <div style="flex: 1; overflow: auto">
-    <app-message-bubble *ngFor="let msg of messages" [message]="msg"> </app-message-bubble>
-
-    <div #scrollEnd></div>
-  </div>
-
-  <div style="display: flex">
-    <input [(ngModel)]="text" placeholder="Type message" />
-
-    <button (click)="send($event)">Send</button>
-  </div>
-</div>
-
-<ng-template #noRoom>
-  <div>Select a room</div>
 </ng-template> -->

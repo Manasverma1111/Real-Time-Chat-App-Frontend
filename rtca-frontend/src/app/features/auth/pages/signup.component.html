@@ -1,4 +1,4 @@
-<!-- <div class="auth-body">
+<div class="auth-body">
   <p class="auth-subheading">Create your account in seconds</p>
 
   <button type="button" class="google-btn" (click)="googleLogin()">
@@ -29,15 +29,24 @@
     <span class="divider-line"></span>
   </div>
 
-  <form (ngSubmit)="submit()" novalidate>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="field-row">
       <div class="field">
         <label>Full name</label>
-        <app-input placeholder="Jane Smith" [control]="form.controls['fullName']"></app-input>
+        <app-input
+          type="text"
+          placeholder="Jane Doe"
+          [control]="form.controls['fullName']"
+        ></app-input>
       </div>
+
       <div class="field">
         <label>Username</label>
-        <app-input placeholder="janesmith" [control]="form.controls['username']"></app-input>
+        <app-input
+          type="text"
+          placeholder="janedoe"
+          [control]="form.controls['username']"
+        ></app-input>
       </div>
     </div>
 
@@ -54,12 +63,12 @@
       <label>Password</label>
       <app-input
         type="password"
-        placeholder="Min. 8 characters"
+        placeholder="••••••••"
         [control]="form.controls['password']"
       ></app-input>
     </div>
 
-    <div class="auth-error" *ngIf="error" role="alert">
+    <div *ngIf="error" class="auth-error">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
         <path
           d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.75 4.25a.75.75 0 0 0-1.5 0v3.5a.75.75 0 0 0 1.5 0v-3.5zm-.75 6a.875.875 0 1 0 0-1.75.875.875 0 0 0 0 1.75z"
@@ -67,17 +76,16 @@
       </svg>
       {{ error }}
     </div>
-
-    <div class="auth-success" *ngIf="success" role="status">{{ success }}</div>
+    <div *ngIf="success" class="auth-success">{{ success }}</div>
 
     <button type="submit" class="submit-btn" [disabled]="loading">
       <span class="btn-spinner" *ngIf="loading"></span>
-      {{ loading ? 'Creating account…' : 'Create account' }}
+      {{ loading ? 'Creating...' : 'Create account' }}
     </button>
   </form>
-</div> -->
+</div>
 
-<div class="auth-body">
+<!-- <div class="auth-body">
   <p class="auth-subheading">Create your account in seconds</p>
 
   <button type="button" class="google-btn" (click)="googleLogin()">Continue with Google</button>
@@ -88,7 +96,6 @@
     <span class="divider-line"></span>
   </div>
 
-  <!-- 🔥 FIXED HERE -->
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="field-row">
       <div class="field">
@@ -119,4 +126,4 @@
       {{ loading ? 'Creating...' : 'Create account' }}
     </button>
   </form>
-</div>
+</div> -->

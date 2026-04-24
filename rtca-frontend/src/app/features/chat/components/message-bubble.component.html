@@ -1,4 +1,12 @@
-<div [style.display]="'flex'" [style.justifyContent]="message?.isOwn ? 'flex-end' : 'flex-start'">
+<div class="bubble-row" [class.own]="message?.isOwn">
+  <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
+    <div *ngIf="!message?.isOwn" class="sender-name">{{ message?.senderName }}</div>
+    <div class="bubble-text">{{ message?.text }}</div>
+    <div class="bubble-time">{{ message?.timestamp }}</div>
+  </div>
+</div>
+
+<!-- <div [style.display]="'flex'" [style.justifyContent]="message?.isOwn ? 'flex-end' : 'flex-start'">
   <div
     style="max-width: 65%; padding: 10px; border-radius: 16px"
     [style.background]="message?.isOwn ? 'linear-gradient(135deg,#8b5cf6,#6366f1)' : '#fff'"
@@ -14,4 +22,4 @@
       {{ message?.timestamp }}
     </div>
   </div>
-</div>
+</div> -->

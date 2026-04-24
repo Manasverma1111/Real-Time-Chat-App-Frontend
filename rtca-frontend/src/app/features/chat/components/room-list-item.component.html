@@ -1,4 +1,19 @@
-<button
+<button class="room-item" [class.active]="isActive" (click)="onClick()">
+  <div class="room-avatar" [class.active]="isActive">
+    {{ initials }}
+  </div>
+
+  <div class="room-info">
+    <div class="room-name">{{ room?.name }}</div>
+    <div class="room-last-msg">
+      {{ room?.lastMessage || 'No messages yet' }}
+    </div>
+  </div>
+
+  <div *ngIf="room?.unread" class="unread-badge">{{ room.unread }}</div>
+</button>
+
+<!-- <button
   (click)="onClick()"
   style="width: 100%; padding: 12px; display: flex; gap: 10px"
   [style.background]="isActive ? '#eef2ff' : '#fff'"
@@ -23,4 +38,4 @@
       {{ room?.lastMessage || 'No messages yet' }}
     </div>
   </div>
-</button>
+</button> -->
