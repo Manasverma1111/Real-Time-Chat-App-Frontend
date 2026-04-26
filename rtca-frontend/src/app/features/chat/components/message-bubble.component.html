@@ -1,25 +1,18 @@
 <div class="bubble-row" [class.own]="message?.isOwn">
   <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
-    <div *ngIf="!message?.isOwn" class="sender-name">{{ message?.senderName }}</div>
-    <div class="bubble-text">{{ message?.text }}</div>
-    <div class="bubble-time">{{ message?.timestamp }}</div>
+    <!-- show sender id for other user -->
+    <div *ngIf="!message?.isOwn" class="sender-name">
+      {{ message?.senderId }}
+    </div>
+
+    <!-- IMPORTANT FIX -->
+    <div class="bubble-text">
+      {{ message?.content }}
+    </div>
+
+    <!-- IMPORTANT FIX -->
+    <div class="bubble-time">
+      {{ message?.createdAt | date: 'shortTime' }}
+    </div>
   </div>
 </div>
-
-<!-- <div [style.display]="'flex'" [style.justifyContent]="message?.isOwn ? 'flex-end' : 'flex-start'">
-  <div
-    style="max-width: 65%; padding: 10px; border-radius: 16px"
-    [style.background]="message?.isOwn ? 'linear-gradient(135deg,#8b5cf6,#6366f1)' : '#fff'"
-    [style.color]="message?.isOwn ? '#fff' : '#111827'"
-  >
-    <div *ngIf="!message?.isOwn" style="font-size: 12px">
-      {{ message?.senderName }}
-    </div>
-
-    <div>{{ message?.text }}</div>
-
-    <div style="font-size: 10px; text-align: right">
-      {{ message?.timestamp }}
-    </div>
-  </div>
-</div> -->

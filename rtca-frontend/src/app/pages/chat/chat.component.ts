@@ -1,7 +1,3 @@
-//
-
-// chat.component.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -79,7 +75,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.connectSocket();
 
-    // Temporary dummy room until Room Service is built
     this.rooms = [
       {
         id: '11111111-1111-1111-1111-111111111111',
@@ -98,26 +93,32 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Select room
   selectRoom(room: any) {
     this.selectedRoom = room;
     this.loadMessages(room.id);
     this.subscribeToRoom(room.id);
   }
 
-  // Load messages
   loadMessages(roomId: string) {
     this.messageService.getMessagesByRoom(roomId).subscribe((data: any) => {
       this.messages = (data || []).map((msg: any) => ({
         ...msg,
-        isOwn: msg.senderId === localStorage.getItem('userId'),
+
+        // IMPORTANT FIX
+        isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+
+        text: msg.content,
+        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
       }));
     });
   }
 
-  // Connect WebSocket
   connectSocket() {
-    const token = localStorage.getItem('connecthub_token');
+    // IMPORTANT: sessionStorage
+    const token = sessionStorage.getItem('connecthub_token');
 
     this.socketService.connect(
       token || '',
@@ -132,7 +133,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Subscribe to room
   subscribeToRoom(roomId: string) {
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
@@ -143,13 +143,20 @@ export class ChatComponent implements OnInit, OnDestroy {
         ...this.messages,
         {
           ...msg,
-          isOwn: msg.senderId === localStorage.getItem('userId'),
+
+          // IMPORTANT FIX
+          isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+
+          text: msg.content,
+          timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+          }),
         },
       ];
     });
   }
 
-  // Send message
   sendMessage(text: string) {
     if (!this.selectedRoom || !text.trim()) return;
 
@@ -160,12 +167,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.socketService.send({
       roomId: this.selectedRoom.id,
-      senderId: localStorage.getItem('userId'),
+
+      // IMPORTANT: sessionStorage
+      senderId: sessionStorage.getItem('userId'),
+
       content: text,
     });
   }
 
-  // Create Room (temporary)
   handleCreateRoom() {
     const roomName = prompt('Enter room name');
 
@@ -180,16 +189,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectRoom(newRoom);
   }
 
-  // Final Proper Logout
   handleLogout() {
-    // First stop websocket reconnect loop
     this.socketService.disconnect();
 
-    // Then blacklist token in backend
     this.authService.logout().subscribe({
       next: () => {
-        localStorage.removeItem('connecthub_token');
-        localStorage.removeItem('userId');
+        // IMPORTANT: sessionStorage
+        sessionStorage.removeItem('connecthub_token');
+        sessionStorage.removeItem('userId');
 
         this.router.navigate(['/login']);
       },
@@ -197,9 +204,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Logout failed:', err);
 
-        // Even if backend fails, force cleanup
-        localStorage.removeItem('connecthub_token');
-        localStorage.removeItem('userId');
+        sessionStorage.removeItem('connecthub_token');
+        sessionStorage.removeItem('userId');
 
         this.router.navigate(['/login']);
       },
