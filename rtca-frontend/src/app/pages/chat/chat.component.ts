@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -8,6 +8,7 @@ import { ChatWindowComponent } from '../../features/chat/components/chat-window.
 import { MessageService } from '../../core/services/message.service';
 import { SocketService } from '../../core/services/socket.service';
 import { AuthService } from '../../core/services/auth.service';
+import { RoomService } from '../../core/services/room.service';
 
 @Component({
   selector: 'app-chat',
@@ -61,28 +62,23 @@ export class ChatComponent implements OnInit, OnDestroy {
   rooms: any[] = [];
   selectedRoom: any = null;
   messages: any[] = [];
+  loadingRooms = false;
 
   socketConnected = false;
   private currentSubscription: any;
 
   constructor(
+    private roomService: RoomService,
     private messageService: MessageService,
     private socketService: SocketService,
     private authService: AuthService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
     this.connectSocket();
-
-    this.rooms = [
-      {
-        id: '11111111-1111-1111-1111-111111111111',
-        name: 'General Chat',
-      },
-    ];
-
-    this.selectRoom(this.rooms[0]);
+    this.loadRooms();
   }
 
   ngOnDestroy() {
@@ -93,31 +89,94 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectRoom(room: any) {
-    this.selectedRoom = room;
-    this.loadMessages(room.id);
-    this.subscribeToRoom(room.id);
-  }
+  /*
+   ========================
+   LOAD ROOMS
+   ========================
+  */
 
-  loadMessages(roomId: string) {
-    this.messageService.getMessagesByRoom(roomId).subscribe((data: any) => {
-      this.messages = (data || []).map((msg: any) => ({
-        ...msg,
+  loadRooms() {
+    this.loadingRooms = true;
 
-        // IMPORTANT FIX
-        isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+    this.roomService.getUserRooms().subscribe({
+      next: (data: any) => {
+        this.rooms = (data || []).map((room: any) => ({
+          id: room.roomId,
+          name: room.name,
+          type: room.type,
+          lastMessage: 'No messages yet',
+        }));
 
-        text: msg.content,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-          hour: 'numeric',
-          minute: '2-digit',
-        }),
-      }));
+        // IMPORTANT FIX:
+        // auto select first room immediately
+        if (this.rooms.length > 0) {
+          this.selectRoom(this.rooms[0]);
+        }
+
+        this.loadingRooms = false;
+        this.cdr.detectChanges();
+      },
+
+      error: (err) => {
+        console.error('Failed to load rooms:', err);
+        this.loadingRooms = false;
+      },
     });
   }
 
+  /*
+   ========================
+   SELECT ROOM
+   ========================
+  */
+
+  selectRoom(room: any) {
+    if (!room) return;
+
+    this.selectedRoom = room;
+
+    this.loadMessages(room.id);
+    this.subscribeToRoom(room.id);
+
+    this.cdr.detectChanges();
+  }
+
+  /*
+   ========================
+   LOAD MESSAGES
+   ========================
+  */
+
+  loadMessages(roomId: string) {
+    this.messageService.getMessagesByRoom(roomId).subscribe({
+      next: (data: any) => {
+        this.messages = (data || []).map((msg: any) => ({
+          ...msg,
+          isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+
+          text: msg.content,
+          timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+          }),
+        }));
+
+        this.cdr.detectChanges();
+      },
+
+      error: (err) => {
+        console.error('Failed to load messages:', err);
+      },
+    });
+  }
+
+  /*
+   ========================
+   SOCKET
+   ========================
+  */
+
   connectSocket() {
-    // IMPORTANT: sessionStorage
     const token = sessionStorage.getItem('connecthub_token');
 
     this.socketService.connect(
@@ -143,8 +202,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         ...this.messages,
         {
           ...msg,
-
-          // IMPORTANT FIX
           isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
 
           text: msg.content,
@@ -154,8 +211,16 @@ export class ChatComponent implements OnInit, OnDestroy {
           }),
         },
       ];
+
+      this.cdr.detectChanges();
     });
   }
+
+  /*
+   ========================
+   SEND MESSAGE
+   ========================
+  */
 
   sendMessage(text: string) {
     if (!this.selectedRoom || !text.trim()) return;
@@ -167,46 +232,64 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.socketService.send({
       roomId: this.selectedRoom.id,
-
-      // IMPORTANT: sessionStorage
       senderId: sessionStorage.getItem('userId'),
+
+      // IMPORTANT FIX
+      // set real username here
+      senderName: sessionStorage.getItem('username') || 'User',
 
       content: text,
     });
   }
 
+  /*
+   ========================
+   CREATE ROOM
+   ========================
+  */
+
   handleCreateRoom() {
     const roomName = prompt('Enter room name');
 
-    if (!roomName || !roomName.trim()) return;
+    if (!roomName?.trim()) return;
 
-    const newRoom = {
-      id: crypto.randomUUID(),
-      name: roomName.trim(),
-    };
+    this.roomService
+      .createRoom({
+        name: roomName.trim(),
+        type: 'GROUP',
+        memberIds: [],
+      })
+      .subscribe({
+        next: () => {
+          this.loadRooms();
+        },
 
-    this.rooms = [...this.rooms, newRoom];
-    this.selectRoom(newRoom);
+        error: (err) => {
+          console.error('Create room failed:', err);
+        },
+      });
   }
+
+  /*
+   ========================
+   LOGOUT
+   ========================
+  */
 
   handleLogout() {
     this.socketService.disconnect();
 
     this.authService.logout().subscribe({
       next: () => {
-        // IMPORTANT: sessionStorage
         sessionStorage.removeItem('connecthub_token');
         sessionStorage.removeItem('userId');
-
         this.router.navigate(['/login']);
       },
 
-      error: (err) => {
-        console.error('Logout failed:', err);
-
+      error: () => {
         sessionStorage.removeItem('connecthub_token');
         sessionStorage.removeItem('userId');
-
+        sessionStorage.removeItem('username');
         this.router.navigate(['/login']);
       },
     });

@@ -1,18 +1,32 @@
 <div class="bubble-row" [class.own]="message?.isOwn">
   <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
-    <!-- show sender id for other user -->
+    <!-- show sender NAME instead of UUID -->
     <div *ngIf="!message?.isOwn" class="sender-name">
-      {{ message?.senderId }}
+      {{ message?.senderName || 'User' }}
     </div>
 
-    <!-- IMPORTANT FIX -->
     <div class="bubble-text">
       {{ message?.content }}
     </div>
 
-    <!-- IMPORTANT FIX -->
     <div class="bubble-time">
       {{ message?.createdAt | date: 'shortTime' }}
     </div>
   </div>
 </div>
+
+<!-- <div class="bubble-row" [class.own]="message?.isOwn">
+  <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
+    <div *ngIf="!message?.isOwn" class="sender-name">
+      {{ message?.senderId }}
+    </div>
+
+    <div class="bubble-text">
+      {{ message?.content }}
+    </div>
+
+    <div class="bubble-time">
+      {{ message?.createdAt | date: 'shortTime' }}
+    </div>
+  </div>
+</div> -->

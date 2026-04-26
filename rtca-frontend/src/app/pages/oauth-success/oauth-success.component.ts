@@ -14,36 +14,25 @@ export class OAuthSuccessComponent implements OnInit {
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       const params = new URLSearchParams(window.location.search);
+
       const token = params.get('token');
+      const username = params.get('username');
+      const userId = params.get('userId');
 
       if (token) {
-        localStorage.setItem('connecthub_token', token);
+        // IMPORTANT FIX → use sessionStorage only
+        sessionStorage.setItem('connecthub_token', token);
+      }
+
+      if (userId) {
+        sessionStorage.setItem('userId', userId);
+      }
+
+      if (username) {
+        sessionStorage.setItem('username', username);
       }
 
       this.router.navigate(['/chat']);
     }
   }
 }
-
-// import { Component, OnInit } from '@angular/core';
-// import { Router } from '@angular/router';
-
-// @Component({
-//   selector: 'app-oauth-success',
-//   template: `<div>Logging you in...</div>`,
-// })
-// export class OAuthSuccessComponent implements OnInit {
-//   constructor(private router: Router) {}
-
-//   ngOnInit(): void {
-//     const params = new URLSearchParams(window.location.search);
-//     const token = params.get('token');
-
-//     if (token) {
-//       localStorage.setItem('connecthub_token', token);
-//     }
-
-//     // Redirect directly to chat
-//     this.router.navigate(['/chat']);
-//   }
-// }
