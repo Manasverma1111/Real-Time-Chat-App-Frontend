@@ -24,10 +24,14 @@
       <div class="modal-title">Create New Room</div>
       <div class="modal-subtitle">Create a room for group conversations</div>
 
+      <!-- ROOM NAME -->
+
       <div class="form-group">
         <label class="form-label">Room Name</label>
         <input [(ngModel)]="newRoomName" class="form-input" placeholder="Enter room name" />
       </div>
+
+      <!-- ROOM TYPE -->
 
       <div class="form-group">
         <label class="form-label">Room Type</label>
@@ -37,11 +41,47 @@
         </select>
       </div>
 
+      <!-- ADD MEMBERS -->
+
+      <div class="form-group">
+        <label class="form-label">Add Members</label>
+
+        <input
+          [(ngModel)]="userSearch"
+          (input)="searchUsers()"
+          class="form-input"
+          placeholder="Search username..."
+        />
+
+        <!-- SEARCH RESULTS -->
+
+        <div *ngIf="searchedUsers.length" class="search-results">
+          <div class="search-user" *ngFor="let user of searchedUsers" (click)="addMember(user)">
+            {{ user.username }}
+          </div>
+        </div>
+
+        <!-- SELECTED MEMBERS -->
+
+        <div *ngIf="selectedMembers.length" class="selected-members">
+          <div class="member-chip" *ngFor="let member of selectedMembers">
+            {{ member.username }}
+            <span (click)="removeMember(member.userId)">×</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+
       <div class="modal-actions">
         <button class="btn-cancel" (click)="closeCreateRoomModal()">Cancel</button>
 
-        <button class="btn-create" [disabled]="!newRoomName.trim()" (click)="submitCreateRoom()">
-          Create Room
+        <button
+          class="btn-create"
+          [disabled]="!newRoomName.trim() || creatingRoom"
+          (click)="submitCreateRoom()"
+        >
+          {{ creatingRoom ? 'Creating...' : 'Create Room' }}
         </button>
       </div>
     </div>

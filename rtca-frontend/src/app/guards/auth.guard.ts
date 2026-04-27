@@ -8,10 +8,10 @@ export class AuthGuard implements CanActivate {
   constructor(private router: Router) {}
 
   canActivate(): boolean | UrlTree {
-    const token = localStorage.getItem('connecthub_token');
+    const token = sessionStorage.getItem('connecthub_token');
 
     if (!token) {
-      return this.router.createUrlTree(['/login']); 
+      return this.router.createUrlTree(['/login']);
     }
 
     return true;

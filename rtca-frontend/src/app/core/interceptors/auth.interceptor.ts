@@ -27,7 +27,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const token = localStorage.getItem('connecthub_token');
+  const token = sessionStorage.getItem('connecthub_token');
 
   if (token) {
     req = req.clone({

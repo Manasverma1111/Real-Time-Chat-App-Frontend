@@ -1,5 +1,3 @@
-// src/app/pages/chat/chat.component.ts
-
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -187,6 +185,13 @@ export class ChatComponent implements OnInit, OnDestroy {
   newRoomName = '';
   newRoomType = 'GROUP';
 
+  // USER SEARCH (for adding members to room)
+  userSearch = '';
+  searchedUsers: any[] = [];
+  selectedMembers: any[] = [];
+  searchLoading = false;
+  creatingRoom = false;
+
   constructor(
     private roomService: RoomService,
     private messageService: MessageService,
@@ -329,25 +334,33 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.showCreateRoomModal = false;
     this.newRoomName = '';
     this.newRoomType = 'GROUP';
+
+    this.userSearch = '';
+    this.searchedUsers = [];
+    this.selectedMembers = [];
   }
 
   submitCreateRoom() {
-    if (!this.newRoomName.trim()) return;
+    if (!this.newRoomName.trim() || this.creatingRoom) return;
+
+    this.creatingRoom = true;
 
     this.roomService
       .createRoom({
         name: this.newRoomName.trim(),
         type: this.newRoomType,
-        memberIds: [],
+        memberIds: this.selectedMembers.map((m) => m.userId),
       })
       .subscribe({
         next: () => {
+          this.creatingRoom = false;
           this.closeCreateRoomModal();
           this.loadRooms();
         },
 
         error: (err) => {
           console.error('Create room failed:', err);
+          this.creatingRoom = false;
         },
       });
   }
@@ -370,5 +383,44 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       },
     });
+  }
+
+  searchUsers() {
+    if (!this.userSearch.trim()) {
+      this.searchedUsers = [];
+      return;
+    }
+
+    this.searchLoading = true;
+
+    this.authService.searchUsers(this.userSearch.trim()).subscribe({
+      next: (users: any) => {
+        const currentUserId = sessionStorage.getItem('userId');
+
+        this.searchedUsers = (users || []).filter(
+          (u: any) =>
+            String(u.userId) !== String(currentUserId) &&
+            !this.selectedMembers.some((member) => String(member.userId) === String(u.userId)),
+        );
+
+        this.searchLoading = false;
+        this.cdr.detectChanges();
+      },
+
+      error: (err) => {
+        console.error('User search failed:', err);
+        this.searchLoading = false;
+      },
+    });
+  }
+
+  addMember(user: any) {
+    this.selectedMembers = [...this.selectedMembers, user];
+    this.userSearch = '';
+    this.searchedUsers = [];
+  }
+
+  removeMember(userId: string) {
+    this.selectedMembers = this.selectedMembers.filter((m) => String(m.userId) !== String(userId));
   }
 }
