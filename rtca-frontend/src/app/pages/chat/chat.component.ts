@@ -1,5 +1,8 @@
+// src/app/pages/chat/chat.component.ts
+
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { SidebarComponent } from '../../features/chat/components/sidebar.component';
@@ -13,7 +16,7 @@ import { RoomService } from '../../core/services/room.service';
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, ChatWindowComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, ChatWindowComponent],
   templateUrl: './chat.component.html',
   styles: [
     `
@@ -29,6 +32,7 @@ import { RoomService } from '../../core/services/room.service';
         height: 100vh;
         overflow: hidden;
         background: var(--bg-base);
+        position: relative;
       }
 
       .chat-main {
@@ -55,6 +59,117 @@ import { RoomService } from '../../core/services/room.service';
         min-height: 0;
         overflow: hidden;
       }
+
+      /* MODAL */
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
+
+      .create-room-modal {
+        width: 420px;
+        max-width: 92%;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text-primary);
+      }
+
+      .modal-subtitle {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .form-input,
+      .form-select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+        outline: none;
+        font-size: 14px;
+      }
+
+      .form-input:focus,
+      .form-select:focus {
+        border-color: var(--accent);
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .btn-cancel {
+        padding: 10px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 230, 230, 0.28);
+      }
+
+      .btn-create {
+        padding: 10px 20px;
+        border: none;
+        background: var(--accent);
+        color: #111111;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-create:hover:not(:disabled) {
+        opacity: 0.92;
+        transform: translateY(-1px);
+      }
+
+      .btn-create:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
     `,
   ],
 })
@@ -66,6 +181,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   socketConnected = false;
   private currentSubscription: any;
+
+  // NEW ROOM MODAL
+  showCreateRoomModal = false;
+  newRoomName = '';
+  newRoomType = 'GROUP';
 
   constructor(
     private roomService: RoomService,
@@ -89,12 +209,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  /*
-   ========================
-   LOAD ROOMS
-   ========================
-  */
-
   loadRooms() {
     this.loadingRooms = true;
 
@@ -107,8 +221,6 @@ export class ChatComponent implements OnInit, OnDestroy {
           lastMessage: 'No messages yet',
         }));
 
-        // IMPORTANT FIX:
-        // auto select first room immediately
         if (this.rooms.length > 0) {
           this.selectRoom(this.rooms[0]);
         }
@@ -124,28 +236,15 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  /*
-   ========================
-   SELECT ROOM
-   ========================
-  */
-
   selectRoom(room: any) {
     if (!room) return;
 
     this.selectedRoom = room;
-
     this.loadMessages(room.id);
     this.subscribeToRoom(room.id);
 
     this.cdr.detectChanges();
   }
-
-  /*
-   ========================
-   LOAD MESSAGES
-   ========================
-  */
 
   loadMessages(roomId: string) {
     this.messageService.getMessagesByRoom(roomId).subscribe({
@@ -153,12 +252,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.messages = (data || []).map((msg: any) => ({
           ...msg,
           isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
-
-          text: msg.content,
-          timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit',
-          }),
         }));
 
         this.cdr.detectChanges();
@@ -169,12 +262,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
     });
   }
-
-  /*
-   ========================
-   SOCKET
-   ========================
-  */
 
   connectSocket() {
     const token = sessionStorage.getItem('connecthub_token');
@@ -198,29 +285,21 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     this.currentSubscription = this.socketService.subscribe(roomId, (msg: any) => {
+      if (String(msg.roomId) !== String(this.selectedRoom?.id)) {
+        return;
+      }
+
       this.messages = [
         ...this.messages,
         {
           ...msg,
           isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
-
-          text: msg.content,
-          timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit',
-          }),
         },
       ];
 
       this.cdr.detectChanges();
     });
   }
-
-  /*
-   ========================
-   SEND MESSAGE
-   ========================
-  */
 
   sendMessage(text: string) {
     if (!this.selectedRoom || !text.trim()) return;
@@ -233,34 +312,37 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.socketService.send({
       roomId: this.selectedRoom.id,
       senderId: sessionStorage.getItem('userId'),
-
-      // IMPORTANT FIX
-      // set real username here
       senderName: sessionStorage.getItem('username') || 'User',
-
       content: text,
     });
   }
 
   /*
-   ========================
-   CREATE ROOM
-   ========================
+   NEW CREATE ROOM UI
   */
 
   handleCreateRoom() {
-    const roomName = prompt('Enter room name');
+    this.showCreateRoomModal = true;
+  }
 
-    if (!roomName?.trim()) return;
+  closeCreateRoomModal() {
+    this.showCreateRoomModal = false;
+    this.newRoomName = '';
+    this.newRoomType = 'GROUP';
+  }
+
+  submitCreateRoom() {
+    if (!this.newRoomName.trim()) return;
 
     this.roomService
       .createRoom({
-        name: roomName.trim(),
-        type: 'GROUP',
+        name: this.newRoomName.trim(),
+        type: this.newRoomType,
         memberIds: [],
       })
       .subscribe({
         next: () => {
+          this.closeCreateRoomModal();
           this.loadRooms();
         },
 
@@ -270,12 +352,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
-  /*
-   ========================
-   LOGOUT
-   ========================
-  */
-
   handleLogout() {
     this.socketService.disconnect();
 
@@ -283,6 +359,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: () => {
         sessionStorage.removeItem('connecthub_token');
         sessionStorage.removeItem('userId');
+        sessionStorage.removeItem('username');
         this.router.navigate(['/login']);
       },
 
