@@ -287,14 +287,42 @@ export class ChatComponent implements OnInit, OnDestroy {
           isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
         }));
 
+        /*
+       NEW:
+       mark messages from other users as seen
+      */
+        this.messageService.markMessagesAsSeen(roomId).subscribe({
+          next: () => {},
+          error: (err: any) => {
+            console.error('Failed to mark messages as seen:', err);
+          },
+        });
+
         this.cdr.detectChanges();
       },
 
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load messages:', err);
       },
     });
   }
+
+  // loadMessages(roomId: string) {
+  //   this.messageService.getMessagesByRoom(roomId).subscribe({
+  //     next: (data: any) => {
+  //       this.messages = (data || []).map((msg: any) => ({
+  //         ...msg,
+  //         isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+  //       }));
+
+  //       this.cdr.detectChanges();
+  //     },
+
+  //     error: (err) => {
+  //       console.error('Failed to load messages:', err);
+  //     },
+  //   });
+  // }
 
   connectSocket() {
     const token = sessionStorage.getItem('connecthub_token');

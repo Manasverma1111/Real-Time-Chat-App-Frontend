@@ -18,6 +18,15 @@ export class ApiService {
   }
 
   /*
+   FINAL FIX:
+   Added PUT method for markMessagesAsSeen()
+   and future update APIs
+  */
+  put<T>(url: string, body: any) {
+    return this.http.put<T>(`${this.BASE_URL}${url}`, body);
+  }
+
+  /*
    DELETE METHOD FOR ROOM MEMBER MANAGEMENT
   */
 

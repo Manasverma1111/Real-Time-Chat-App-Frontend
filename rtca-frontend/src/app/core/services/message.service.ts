@@ -14,4 +14,11 @@ export class MessageService {
   getMessagesByRoom(roomId: string) {
     return this.api.get(`/messages?roomId=${roomId}`);
   }
+
+  /*
+   NEW
+  */
+  markMessagesAsSeen(roomId: string) {
+    return this.api.put(`/messages/${roomId}/seen`, {});
+  }
 }
