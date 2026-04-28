@@ -394,7 +394,18 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   handleLogout() {
+    const userId = sessionStorage.getItem('userId');
+
     this.socketService.disconnect();
+
+    if (userId) {
+      this.authService.markUserOffline(userId).subscribe({
+        next: () => {},
+        error: (err) => {
+          console.error('Failed to mark user offline', err);
+        },
+      });
+    }
 
     this.authService.logout().subscribe({
       next: () => {
@@ -412,6 +423,26 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  // handleLogout() {
+  //   this.socketService.disconnect();
+
+  //   this.authService.logout().subscribe({
+  //     next: () => {
+  //       sessionStorage.removeItem('connecthub_token');
+  //       sessionStorage.removeItem('userId');
+  //       sessionStorage.removeItem('username');
+  //       this.router.navigate(['/login']);
+  //     },
+
+  //     error: () => {
+  //       sessionStorage.removeItem('connecthub_token');
+  //       sessionStorage.removeItem('userId');
+  //       sessionStorage.removeItem('username');
+  //       this.router.navigate(['/login']);
+  //     },
+  //   });
+  // }
 
   searchUsers() {
     if (!this.userSearch.trim()) {
