@@ -244,6 +244,13 @@ export class ChatComponent implements OnInit, OnDestroy {
           id: room.roomId,
           name: room.name,
           type: room.type,
+
+          /*
+         FINAL FIX:
+         keep memberCount + onlineCount from backend
+        */
+          memberCount: room.memberCount || 0,
+          onlineCount: room.onlineCount || 0,
           lastMessage: 'No messages yet',
         }));
 

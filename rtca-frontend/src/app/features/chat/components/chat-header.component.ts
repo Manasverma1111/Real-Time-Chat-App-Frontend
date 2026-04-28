@@ -122,6 +122,14 @@ export class ChatHeaderComponent {
     );
   }
 
+  /*
+   FINAL FIX:
+   use backend fields memberCount + onlineCount
+  */
+  get roomMeta(): string {
+    return `${this.room?.memberCount || 0} members • ${this.room?.onlineCount || 0} online`;
+  }
+
   handleViewMembers() {
     this.viewMembers.emit();
   }
