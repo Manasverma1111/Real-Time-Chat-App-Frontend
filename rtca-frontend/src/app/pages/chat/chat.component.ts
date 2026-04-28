@@ -307,23 +307,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // loadMessages(roomId: string) {
-  //   this.messageService.getMessagesByRoom(roomId).subscribe({
-  //     next: (data: any) => {
-  //       this.messages = (data || []).map((msg: any) => ({
-  //         ...msg,
-  //         isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
-  //       }));
-
-  //       this.cdr.detectChanges();
-  //     },
-
-  //     error: (err) => {
-  //       console.error('Failed to load messages:', err);
-  //     },
-  //   });
-  // }
-
   connectSocket() {
     const token = sessionStorage.getItem('connecthub_token');
 
