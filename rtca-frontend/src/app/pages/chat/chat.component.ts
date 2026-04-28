@@ -499,4 +499,66 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  /*
+ ADD MEMBER INSIDE MEMBERS MODAL
+*/
+
+  searchNewMembers() {
+    if (!this.memberSearch.trim() || !this.selectedRoom) {
+      this.searchedNewMembers = [];
+      return;
+    }
+
+    this.authService.searchUsers(this.memberSearch.trim()).subscribe({
+      next: (users: any) => {
+        const existingIds = this.roomMembers.map((m) => String(m.userId));
+        const currentUserId = String(sessionStorage.getItem('userId'));
+
+        this.searchedNewMembers = (users || []).filter(
+          (u: any) => String(u.userId) !== currentUserId && !existingIds.includes(String(u.userId)),
+        );
+
+        this.cdr.detectChanges();
+      },
+
+      error: (err) => {
+        console.error('Search new members failed:', err);
+      },
+    });
+  }
+
+  addMemberToExistingRoom(user: any) {
+    if (!this.selectedRoom) return;
+
+    this.roomService.addMemberToRoom(this.selectedRoom.id, user.userId).subscribe({
+      next: () => {
+        this.memberSearch = '';
+        this.searchedNewMembers = [];
+        this.handleViewMembers(); // refresh members list
+      },
+
+      error: (err) => {
+        console.error('Add member failed:', err);
+      },
+    });
+  }
+
+  /*
+ REMOVE MEMBER FROM EXISTING ROOM
+*/
+
+  removeMemberFromExistingRoom(memberId: string) {
+    if (!this.selectedRoom) return;
+
+    this.roomService.removeMemberFromRoom(this.selectedRoom.id, memberId).subscribe({
+      next: () => {
+        this.handleViewMembers(); // refresh
+      },
+
+      error: (err) => {
+        console.error('Remove member failed:', err);
+      },
+    });
+  }
 }

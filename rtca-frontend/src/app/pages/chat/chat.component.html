@@ -92,13 +92,57 @@
 
   <!-- MEMBERS MODAL -->
 
-  <div *ngIf="showMembersModal" class="modal-backdrop">
+  <!-- <div *ngIf="showMembersModal" class="modal-backdrop">
     <div class="create-room-modal">
       <div class="modal-title">Room Members</div>
       <div class="modal-subtitle">Manage room members</div>
 
       <div *ngFor="let member of roomMembers" class="member-chip">
         {{ member.username }}
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeMembersModal()">Close</button>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- MEMBERS MODAL -->
+
+  <div *ngIf="showMembersModal" class="modal-backdrop">
+    <div class="create-room-modal">
+      <div class="modal-title">Room Members</div>
+      <div class="modal-subtitle">Manage room members</div>
+
+      <!-- ADD NEW MEMBER -->
+
+      <div class="form-group">
+        <label class="form-label">Add Member</label>
+
+        <input
+          [(ngModel)]="memberSearch"
+          (input)="searchNewMembers()"
+          class="form-input"
+          placeholder="Search username..."
+        />
+
+        <div *ngIf="searchedNewMembers.length" class="search-results">
+          <div
+            class="search-user"
+            *ngFor="let user of searchedNewMembers"
+            (click)="addMemberToExistingRoom(user)"
+          >
+            {{ user.username }}
+          </div>
+        </div>
+      </div>
+
+      <!-- EXISTING MEMBERS -->
+
+      <div *ngFor="let member of roomMembers" class="member-chip">
+        {{ member.username }}
+
+        <span (click)="removeMemberFromExistingRoom(member.userId)"> × </span>
       </div>
 
       <div class="modal-actions">
