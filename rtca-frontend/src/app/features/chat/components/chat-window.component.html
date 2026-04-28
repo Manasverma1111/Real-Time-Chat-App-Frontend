@@ -1,6 +1,12 @@
 <div *ngIf="room; else noRoom" class="chat-window">
   <!-- Header -->
-  <app-chat-header [room]="room"></app-chat-header>
+  <!-- <app-chat-header [room]="room"></app-chat-header> -->
+  <app-chat-header
+    [room]="room"
+    (viewMembers)="handleViewMembers()"
+    (leaveRoom)="handleLeaveRoom()"
+    (deleteRoom)="handleDeleteRoom()"
+  ></app-chat-header>
 
   <!-- Messages -->
   <div class="messages-area">

@@ -168,6 +168,19 @@ import { RoomService } from '../../core/services/room.service';
         cursor: not-allowed;
         transform: none;
       }
+
+      .member-chip {
+        display: inline-flex;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: var(--bg-elevated);
+        margin: 6px 6px 0 0;
+      }
+
+      .member-chip span {
+        cursor: pointer;
+      }
     `,
   ],
 })
@@ -191,6 +204,14 @@ export class ChatComponent implements OnInit, OnDestroy {
   selectedMembers: any[] = [];
   searchLoading = false;
   creatingRoom = false;
+
+  /*
+   MEMBER MANAGEMENT
+  */
+  showMembersModal = false;
+  roomMembers: any[] = [];
+  memberSearch = '';
+  searchedNewMembers: any[] = [];
 
   constructor(
     private roomService: RoomService,
@@ -422,5 +443,60 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   removeMember(userId: string) {
     this.selectedMembers = this.selectedMembers.filter((m) => String(m.userId) !== String(userId));
+  }
+
+  /*
+   VIEW MEMBERS
+  */
+
+  handleViewMembers() {
+    if (!this.selectedRoom) return;
+
+    this.roomService.getRoomMembers(this.selectedRoom.id).subscribe({
+      next: (data: any) => {
+        this.roomMembers = data || [];
+        this.showMembersModal = true;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  closeMembersModal() {
+    this.showMembersModal = false;
+    this.roomMembers = [];
+    this.memberSearch = '';
+    this.searchedNewMembers = [];
+  }
+
+  /*
+   LEAVE ROOM
+  */
+
+  handleLeaveRoom() {
+    if (!this.selectedRoom) return;
+
+    this.roomService.leaveRoom(this.selectedRoom.id).subscribe({
+      next: () => {
+        this.selectedRoom = null;
+        this.messages = [];
+        this.loadRooms();
+      },
+    });
+  }
+
+  /*
+   DELETE ROOM
+  */
+
+  handleDeleteRoom() {
+    if (!this.selectedRoom) return;
+
+    this.roomService.deleteRoom(this.selectedRoom.id).subscribe({
+      next: () => {
+        this.selectedRoom = null;
+        this.messages = [];
+        this.loadRooms();
+      },
+    });
   }
 }
