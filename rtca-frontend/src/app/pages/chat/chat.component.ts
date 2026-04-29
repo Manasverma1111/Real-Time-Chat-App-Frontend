@@ -213,6 +213,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   memberSearch = '';
   searchedNewMembers: any[] = [];
 
+  typingUser = '';
+  private typingSubscription: any;
+  private typingTimer: any;
+
   constructor(
     private roomService: RoomService,
     private messageService: MessageService,
@@ -275,7 +279,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedRoom = room;
     this.loadMessages(room.id);
     this.subscribeToRoom(room.id);
-
+    // typing subscription should be separate so that it doesn't interfere with message subscription
+    this.subscribeTyping(room.id);
     this.cdr.detectChanges();
   }
 
@@ -608,6 +613,45 @@ export class ChatComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Remove member failed:', err);
       },
+    });
+  }
+
+  // TYPING EVENTS
+
+  handleTyping() {
+    if (!this.selectedRoom) return;
+
+    this.socketService.sendTyping({
+      roomId: this.selectedRoom.id,
+      userName: sessionStorage.getItem('username') || 'User',
+      typing: true,
+    });
+  }
+
+  subscribeTyping(roomId: string) {
+    if (this.typingSubscription) {
+      this.typingSubscription.unsubscribe();
+    }
+
+    this.typingSubscription = this.socketService.subscribeTyping(roomId, (event: any) => {
+      const currentUser = sessionStorage.getItem('username') || 'User';
+
+      if (event.userName === currentUser) {
+        return;
+      }
+
+      if (event.typing) {
+        this.typingUser = event.userName;
+
+        clearTimeout(this.typingTimer);
+
+        this.typingTimer = setTimeout(() => {
+          this.typingUser = '';
+          this.cdr.detectChanges();
+        }, 1500);
+
+        this.cdr.detectChanges();
+      }
     });
   }
 }

@@ -184,8 +184,10 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Input() room: any;
   @Input() messages: any[] = [];
   @Input() currentUser: any;
+  @Input() typingUser = '';
 
   @Output() sendMessage = new EventEmitter<string>();
+  @Output() typing = new EventEmitter<void>();
 
   /*
    NEW EVENTS FOR ROOM MEMBER MANAGEMENT
@@ -195,6 +197,8 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Output() deleteRoom = new EventEmitter<void>();
 
   @ViewChild('scrollEnd') scrollEnd!: ElementRef;
+
+  private typingTimeout: any;
 
   text = '';
   sending = false;
@@ -234,5 +238,9 @@ export class ChatWindowComponent implements AfterViewChecked {
 
   handleDeleteRoom() {
     this.deleteRoom.emit();
+  }
+
+  onTyping() {
+    this.typing.emit();
   }
 }

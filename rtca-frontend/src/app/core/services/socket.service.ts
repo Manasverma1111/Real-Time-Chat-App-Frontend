@@ -53,6 +53,20 @@ export class SocketService {
     });
   }
 
+  /*
+   TYPING SUBSCRIBE
+  */
+  subscribeTyping(roomId: string, callback: (msg: any) => void) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.warn('Socket not connected');
+      return null;
+    }
+
+    return this.stompClient.subscribe(`/topic/typing/${roomId}`, (message) => {
+      callback(JSON.parse(message.body));
+    });
+  }
+
   send(payload: any) {
     if (!this.stompClient || !this.stompClient.connected) {
       console.error('Socket not connected');
@@ -61,6 +75,20 @@ export class SocketService {
 
     this.stompClient.publish({
       destination: '/app/chat.send',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /*
+   SEND TYPING EVENT
+  */
+  sendTyping(payload: any) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      return;
+    }
+
+    this.stompClient.publish({
+      destination: '/app/chat.typing',
       body: JSON.stringify(payload),
     });
   }
