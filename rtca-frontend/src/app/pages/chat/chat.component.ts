@@ -292,10 +292,25 @@ export class ChatComponent implements OnInit, OnDestroy {
   loadMessages(roomId: string) {
     this.messageService.getMessagesByRoom(roomId).subscribe({
       next: (data: any) => {
-        this.messages = (data || []).map((msg: any) => ({
-          ...msg,
-          isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
-        }));
+        // this.messages = (data || []).map((msg: any) => ({
+        //   ...msg,
+        //   isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+        // }));
+
+        // GROUP MESSAGES FROM SAME SENDER TOGETHER
+        this.messages = (data || []).map((msg: any, index: number, arr: any[]) => {
+          const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
+
+          const prev = arr[index - 1];
+
+          const isSameSender = prev && String(prev.senderId) === String(msg.senderId);
+
+          return {
+            ...msg,
+            isOwn,
+            isFirstInGroup: !isSameSender,
+          };
+        });
 
         /*
        NEW:
@@ -343,11 +358,19 @@ export class ChatComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // GROUPING LOGIC FOR NEW MESSAGES
+      const last = this.messages[this.messages.length - 1];
+
+      const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
+
+      const isSameSender = last && String(last.senderId) === String(msg.senderId);
+
       this.messages = [
         ...this.messages,
         {
           ...msg,
-          isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
+          isOwn,
+          isFirstInGroup: !isSameSender,
         },
       ];
 

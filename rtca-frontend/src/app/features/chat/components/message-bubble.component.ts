@@ -13,9 +13,13 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
         display: flex;
         align-items: flex-end;
         justify-content: flex-start;
-        margin-bottom: 6px;
+        margin-bottom: 2px;
         gap: 6px;
         padding-left: 2px;
+      }
+
+      .bubble-row.group-gap {
+        margin-top: 8px; /* space between different users */
       }
 
       .bubble-row.own {

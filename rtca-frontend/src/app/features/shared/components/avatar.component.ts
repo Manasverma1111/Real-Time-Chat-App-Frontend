@@ -14,6 +14,7 @@ export class AvatarComponent {
   @Input() size: number = 36;
   @Input() color: string = COLORS.primary;
   @Input() status?: string;
+  @Input() imageUrl?: string;
 
   Math = Math;
 

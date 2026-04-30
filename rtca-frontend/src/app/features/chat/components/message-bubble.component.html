@@ -1,10 +1,19 @@
-<div class="bubble-row" [class.own]="message?.isOwn">
-  <!-- NEW: Avatar -->
+<div class="bubble-row" [class.own]="message?.isOwn" [class.group-gap]="message?.isFirstInGroup">
+  <!-- Avatar (only first message in group) -->
   <app-avatar
-    *ngIf="!message?.isOwn"
+    *ngIf="!message?.isOwn && message?.isFirstInGroup"
     [initials]="(message?.senderName || 'U')[0]"
+    [imageUrl]="message?.avatarUrl"
     [size]="28"
   ></app-avatar>
+
+  <!-- Spacer (VERY IMPORTANT - fixes alignment) -->
+  <div
+    *ngIf="!message?.isOwn && !message?.isFirstInGroup"
+    style="width: 28px; flex-shrink: 0"
+  ></div>
+
+  <!-- Message Bubble -->
   <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
     <div *ngIf="!message?.isOwn" class="sender-name">
       {{ message?.senderName || 'User' }}

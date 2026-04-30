@@ -12,27 +12,37 @@ export class OAuthSuccessComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const params = new URLSearchParams(window.location.search);
+    if (!isPlatformBrowser(this.platformId)) return;
 
-      const token = params.get('token');
-      const username = params.get('username');
-      const userId = params.get('userId');
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
 
-      if (token) {
-        // IMPORTANT FIX → use sessionStorage only
-        sessionStorage.setItem('connecthub_token', token);
-      }
-
-      if (userId) {
-        sessionStorage.setItem('userId', userId);
-      }
-
-      if (username) {
-        sessionStorage.setItem('username', username);
-      }
-
-      this.router.navigate(['/chat']);
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
     }
+
+    // ✅ Store token
+    sessionStorage.setItem('connecthub_token', token);
+
+    // 🔥 CRITICAL FIX: Fetch user from backend
+    fetch('http://localhost:8087/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((user) => {
+        // ✅ Store user properly
+        sessionStorage.setItem('userId', user.userId);
+        sessionStorage.setItem('username', user.username);
+        sessionStorage.setItem('connecthub_user', JSON.stringify(user));
+
+        this.router.navigate(['/chat']);
+      })
+      .catch((err) => {
+        console.error('OAuth user fetch failed:', err);
+        this.router.navigate(['/login']);
+      });
   }
 }
