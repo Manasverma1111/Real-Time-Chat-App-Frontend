@@ -1,17 +1,21 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AvatarComponent } from '../../shared/components/avatar.component';
 
 @Component({
   selector: 'app-message-bubble',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarComponent],
   templateUrl: './message-bubble.component.html',
   styles: [
     `
       .bubble-row {
         display: flex;
+        align-items: flex-end;
         justify-content: flex-start;
         margin-bottom: 6px;
+        gap: 6px;
+        padding-left: 2px;
       }
 
       .bubble-row.own {

@@ -1,13 +1,13 @@
 export function getToken() {
-  return localStorage.getItem('connecthub_token');
+  return sessionStorage.getItem('connecthub_token');
 }
 
 export function setToken(token: string) {
-  localStorage.setItem('connecthub_token', token);
+  sessionStorage.setItem('connecthub_token', token);
 }
 
 export function clearToken() {
-  localStorage.removeItem('connecthub_token');
+  sessionStorage.removeItem('connecthub_token');
 }
 
 export async function fetchCurrentUser() {
@@ -28,4 +28,17 @@ export async function fetchCurrentUser() {
   }
 
   return data;
+}
+
+export function setUser(user: any) {
+  sessionStorage.setItem('connecthub_user', JSON.stringify(user));
+}
+
+export function getUser() {
+  const data = sessionStorage.getItem('connecthub_user');
+  return data ? JSON.parse(data) : null;
+}
+
+export function clearUser() {
+  sessionStorage.removeItem('connecthub_user');
 }

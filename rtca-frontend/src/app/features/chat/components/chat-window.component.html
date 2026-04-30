@@ -37,7 +37,7 @@
       </div>
     </ng-template>
   </div>
-<!-- Typing Indicator -->
+  <!-- Typing Indicator -->
   <div
     *ngIf="typingUser"
     style="padding: 0 20px 10px; font-size: 12px; color: var(--text-secondary); font-style: italic"
@@ -48,6 +48,14 @@
   <!-- Input -->
   <div class="input-bar">
     <div class="input-wrapper">
+      <!-- upload button -->
+      <label class="upload-btn">
+        <input type="file" hidden (change)="onFileSelected($event)" />
+
+        +
+      </label>
+      <span class="upload-tooltip">Upload File</span>
+
       <input
         [(ngModel)]="text"
         placeholder="Type a message..."

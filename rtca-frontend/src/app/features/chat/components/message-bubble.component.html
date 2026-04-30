@@ -1,4 +1,10 @@
 <div class="bubble-row" [class.own]="message?.isOwn">
+  <!-- NEW: Avatar -->
+  <app-avatar
+    *ngIf="!message?.isOwn"
+    [initials]="(message?.senderName || 'U')[0]"
+    [size]="28"
+  ></app-avatar>
   <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
     <div *ngIf="!message?.isOwn" class="sender-name">
       {{ message?.senderName || 'User' }}

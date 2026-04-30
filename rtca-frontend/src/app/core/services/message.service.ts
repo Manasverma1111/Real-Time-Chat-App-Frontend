@@ -21,4 +21,15 @@ export class MessageService {
   markMessagesAsSeen(roomId: string) {
     return this.api.put(`/messages/${roomId}/seen`, {});
   }
+
+  /*
+   MEDIA UPLOAD
+  */
+  uploadMedia(formData: FormData) {
+    return this.api.post('/media/upload', formData);
+  }
+
+  getRoomMedia(roomId: string) {
+    return this.api.get(`/media/room/${roomId}`);
+  }
 }

@@ -113,6 +113,7 @@ import { MessageBubbleComponent } from './message-bubble.component';
         color: var(--text-secondary);
       }
 
+      .upload-btn,
       .send-btn {
         width: 36px;
         height: 36px;
@@ -128,6 +129,12 @@ import { MessageBubbleComponent } from './message-bubble.component';
         transition:
           opacity var(--transition),
           transform var(--transition);
+      }
+
+      .upload-btn {
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        border: 1px solid var(--border-default);
       }
 
       .send-btn:disabled {
@@ -188,6 +195,7 @@ export class ChatWindowComponent implements AfterViewChecked {
 
   @Output() sendMessage = new EventEmitter<string>();
   @Output() typing = new EventEmitter<void>();
+  @Output() uploadFile = new EventEmitter<File>();
 
   /*
    NEW EVENTS FOR ROOM MEMBER MANAGEMENT
@@ -242,5 +250,17 @@ export class ChatWindowComponent implements AfterViewChecked {
 
   onTyping() {
     this.typing.emit();
+  }
+
+  // File upload handler
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || !input.files.length) return;
+
+    const file = input.files[0];
+    this.uploadFile.emit(file);
+
+    input.value = '';
   }
 }

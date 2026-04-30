@@ -33,4 +33,8 @@ export class ApiService {
   delete<T>(url: string) {
     return this.http.delete<T>(`${this.BASE_URL}${url}`);
   }
+
+  uploadFile(url: string, formData: FormData) {
+    return this.http.post(`${this.BASE_URL}${url}`, formData);
+  }
 }

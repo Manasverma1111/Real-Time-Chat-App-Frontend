@@ -47,4 +47,12 @@ export class AuthService {
   markUserOffline(userId: string) {
     return this.api.post(`/presence/offline/${userId}`, {});
   }
+
+  getCurrentUser() {
+    return this.api.get('/auth/me');
+  }
+
+  updateProfile(payload: any) {
+    return this.api.put('/auth/profile', payload);
+  }
 }

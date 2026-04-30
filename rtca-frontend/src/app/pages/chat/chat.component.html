@@ -12,10 +12,11 @@
     <app-chat-window
       [room]="selectedRoom"
       [messages]="messages"
-      [currentUser]="{}"
+      [currentUser]="currentUser"
       [typingUser]="typingUser"
       (sendMessage)="sendMessage($event)"
       (typing)="handleTyping()"
+      (uploadFile)="uploadMedia($event)"
       (viewMembers)="handleViewMembers()"
       (leaveRoom)="handleLeaveRoom()"
       (deleteRoom)="handleDeleteRoom()"

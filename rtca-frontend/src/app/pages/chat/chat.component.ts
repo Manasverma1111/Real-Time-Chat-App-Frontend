@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { getUser } from '../../core/utils/auth.util';
 
 import { SidebarComponent } from '../../features/chat/components/sidebar.component';
 import { ChatWindowComponent } from '../../features/chat/components/chat-window.component';
@@ -198,6 +199,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   newRoomName = '';
   newRoomType = 'GROUP';
 
+  // User info
+  currentUser: any = null;
+
   // USER SEARCH (for adding members to room)
   userSearch = '';
   searchedUsers: any[] = [];
@@ -227,6 +231,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.currentUser = getUser();
     this.connectSocket();
     this.loadRooms();
   }
@@ -366,6 +371,34 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // MEDIA UPLOAD
+
+  uploadMedia(file: File) {
+    if (!this.selectedRoom) return;
+
+    const userId = sessionStorage.getItem('userId');
+
+    if (!userId) return;
+
+    const formData = new FormData();
+    formData.append('roomId', this.selectedRoom.roomId);
+    formData.append('senderId', userId);
+    formData.append('file', file);
+
+    this.messageService.uploadMedia(formData).subscribe({
+      next: (res: any) => {
+        /*
+       Send uploaded file URL as chat message
+      */
+        this.sendMessage(res.filePath);
+      },
+
+      error: (err: any) => {
+        console.error('Media upload failed:', err);
+      },
+    });
+  }
+
   /*
    NEW CREATE ROOM UI
   */
@@ -384,6 +417,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedMembers = [];
   }
 
+  // Submit new room creation
   submitCreateRoom() {
     if (!this.newRoomName.trim() || this.creatingRoom) return;
 
@@ -409,6 +443,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
+  // LOGOUT
   handleLogout() {
     const userId = sessionStorage.getItem('userId');
 
@@ -460,6 +495,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   //   });
   // }
 
+  // USER SEARCH FOR ADDING MEMBERS TO ROOM
   searchUsers() {
     if (!this.userSearch.trim()) {
       this.searchedUsers = [];
@@ -489,6 +525,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // SELECT USER TO ADD AS MEMBER
   addMember(user: any) {
     this.selectedMembers = [...this.selectedMembers, user];
     this.userSearch = '';
@@ -628,6 +665,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // SUBSCRIBE TO TYPING EVENTS
   subscribeTyping(roomId: string) {
     if (this.typingSubscription) {
       this.typingSubscription.unsubscribe();
