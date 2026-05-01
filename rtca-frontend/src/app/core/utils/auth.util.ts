@@ -42,3 +42,12 @@ export function getUser() {
 export function clearUser() {
   sessionStorage.removeItem('connecthub_user');
 }
+
+export function getUserRole(): string | null {
+  const user = getUser();
+  return user?.role || null;
+}
+
+export function isSuperAdmin(): boolean {
+  return getUserRole() === 'SUPER_ADMIN';
+}

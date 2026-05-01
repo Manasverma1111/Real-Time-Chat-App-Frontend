@@ -46,37 +46,48 @@ export class LoginComponent {
           return;
         }
 
-        // IMPORTANT: sessionStorage
+        // ✅ Store token
         sessionStorage.setItem('connecthub_token', data.token);
         sessionStorage.setItem('userId', data.userId || '');
 
-        /*
-         IMPORTANT FIX:
-         Save username for chat message display
-         Backend should return username in login response
-        */
         sessionStorage.setItem(
           'username',
           data.username || this.form.value.email.split('@')[0] || 'User',
         );
 
         /*
-   MARK USER ONLINE
-  */
-        this.auth.markUserOnline(data.userId).subscribe({
-          next: () => {},
+     🔥 CRITICAL FIX (DO NOT SKIP)
+     Fetch user from backend to get role
+    */
+        this.auth.getCurrentUser().subscribe({
+          next: (user: any) => {
+            // ✅ Store full user (INCLUDING ROLE)
+            sessionStorage.setItem('connecthub_user', JSON.stringify(user));
+
+            /*
+         MARK USER ONLINE
+        */
+            this.auth.markUserOnline(data.userId).subscribe({
+              next: () => {},
+              error: (err) => {
+                console.error('Failed to mark user online', err);
+              },
+            });
+
+            this.loading = false;
+            this.router.navigate(['/chat']);
+          },
+
           error: (err) => {
-            console.error('Failed to mark user online', err);
+            console.error('Failed to fetch user after login', err);
+            this.loading = false;
+            this.router.navigate(['/chat']); // fallback (won’t break app)
           },
         });
-
-        this.loading = false;
-        this.router.navigate(['/chat']);
       },
 
       error: (err) => {
         this.error = err?.error?.message || err?.error?.error || 'Invalid email or password';
-
         this.loading = false;
       },
     });

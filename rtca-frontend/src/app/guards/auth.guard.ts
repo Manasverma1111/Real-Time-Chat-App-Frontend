@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
+import { getUser } from '../core/utils/auth.util';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,13 @@ export class AuthGuard implements CanActivate {
 
     if (!token) {
       return this.router.createUrlTree(['/login']);
+    }
+
+    if (this.router.url.includes('/admin')) {
+      const user = getUser();
+      if (user?.role !== 'SUPER_ADMIN') {
+        return this.router.createUrlTree(['/chat']);
+      }
     }
 
     return true;

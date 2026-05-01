@@ -65,6 +65,8 @@
       New Room
     </button>
 
+    <button *ngIf="isAdmin" class="btn-logout" (click)="goToAdmin()">Admin Panel</button>
+
     <button class="btn-logout" (click)="handleLogout()">
       <svg
         width="13"

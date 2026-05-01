@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { RoomListItemComponent } from './room-list-item.component';
+import { Router } from '@angular/router';
+import { isSuperAdmin } from '../../../core/utils/auth.util';
 
 @Component({
   selector: 'app-sidebar',
@@ -220,6 +222,8 @@ export class SidebarComponent {
 
   search = '';
 
+  constructor(private router: Router) {}
+
   get filteredRooms() {
     if (!this.search.trim()) return this.rooms;
     return this.rooms.filter((r) => r.name.toLowerCase().includes(this.search.toLowerCase()));
@@ -235,5 +239,13 @@ export class SidebarComponent {
 
   handleCreateRoom() {
     this.createRoom.emit();
+  }
+
+  goToAdmin() {
+    this.router.navigate(['/admin']);
+  }
+
+  get isAdmin() {
+    return isSuperAdmin();
   }
 }

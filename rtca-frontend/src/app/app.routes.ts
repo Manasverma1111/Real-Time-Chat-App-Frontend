@@ -6,6 +6,7 @@ import { AuthGuard } from './guards/auth.guard';
 
 import { LoginComponent } from './features/auth/pages/login.component';
 import { SignupComponent } from './features/auth/pages/signup.component';
+import { AdminDashboardComponent } from './pages/admin/admin-dashboard.component';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,12 @@ export const routes: Routes = [
   {
     path: 'chat',
     component: ChatComponent,
+    canActivate: [AuthGuard],
+  },
+
+  {
+    path: 'admin',
+    component: AdminDashboardComponent,
     canActivate: [AuthGuard],
   },
 
