@@ -1,7 +1,7 @@
 <style>
   .admin-shell {
     padding: 2rem 1.5rem;
-    max-width: 900px;
+    max-width: 1300px;
     font-family: var(--font-sans, 'Segoe UI', system-ui, sans-serif);
   }
 
@@ -139,7 +139,7 @@
   }
 
   .delete-btn:hover {
-    background: var(--color-background-danger, #fcebeb);
+    background: var(--color-background-danger, #ffffff);
   }
 
   .delete-btn svg {
@@ -198,14 +198,7 @@
   <h1 class="admin-heading">Admin Dashboard</h1>
   <div class="admin-header">
     <button class="back-btn" (click)="goBack()">
-      <svg
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
         <path d="M10 3L5 8l5 5" />
       </svg>
       Back
@@ -213,50 +206,85 @@
     <h2 class="admin-title">Admin Dashboard</h2>
   </div>
 
-  <!-- LOADING STATE -->
+  <!-- LOADING -->
   <div class="state-msg" *ngIf="loading">
-    <span class="loading-dots"> <span></span><span></span><span></span> </span>
+    <span class="loading-dots"><span></span><span></span><span></span></span>
     Loading users…
   </div>
 
-  <!-- EMPTY STATE -->
-  <div class="state-msg" *ngIf="!loading && users.length === 0">No users found</div>
-
-  <!-- USER LIST -->
-  <div class="user-list" *ngIf="!loading && users.length > 0">
-    <div class="user-row" *ngFor="let user of users">
-      <!-- USER INFO -->
+  <!-- SUPER ADMIN -->
+  <div class="user-list" *ngIf="!loading && superAdmin" style="margin-bottom: 20px">
+    <div class="user-row">
       <div class="user-info">
+        <div class="user-avatar">
+          {{ superAdmin.username?.charAt(0)?.toUpperCase() }}
+        </div>
+        <div class="user-meta">
+          <div style="display: flex; gap: 8px; align-items: center">
+            <span class="user-username">{{ superAdmin.username }}</span>
+            <span class="super-admin-badge">SUPER ADMIN</span>
+          </div>
+          <span class="user-fullname">{{ superAdmin.fullName }}</span>
+          <span class="user-fullname">{{ superAdmin.email }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS TABLE -->
+  <div class="user-list" *ngIf="!loading && normalUsers.length > 0">
+    <!-- HEADER -->
+    <div class="user-row" style="font-weight: 600; background: #2f2f2f">
+      <div style="width: 40px"></div>
+      <div style="flex: 1">Username</div>
+      <div style="flex: 1">Full Name</div>
+      <div style="flex: 1.5">Email</div>
+      <div style="flex: 1">Status</div>
+      <div style="flex: 1">Provider</div>
+      <div style="flex: 1.5">User ID</div>
+      <div style="width: 80px">Action</div>
+    </div>
+
+    <!-- ROWS -->
+    <div class="user-row" *ngFor="let user of normalUsers">
+      <div style="width: 40px">
         <div class="user-avatar">
           {{ user.username?.charAt(0)?.toUpperCase() }}
         </div>
-        <div class="user-meta">
-          <div style="display: flex; align-items: center; gap: 8px">
-            <span class="user-username">{{ user.username }}</span>
-            <span class="super-admin-badge" *ngIf="user.role === 'SUPER_ADMIN'">Super Admin</span>
-          </div>
-          <span class="user-fullname">{{ user.fullName }}</span>
-        </div>
       </div>
 
-      <!-- DELETE BUTTON -->
-      <button
-        class="delete-btn"
-        *ngIf="user.role !== 'SUPER_ADMIN'"
-        (click)="deleteUser(user.userId)"
-      >
-        <svg
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 9h8l1-9" />
-        </svg>
-        Delete
-      </button>
+      <div style="flex: 1" class="user-username">
+        {{ user.username }}
+      </div>
+
+      <div style="flex: 1" class="user-fullname">
+        {{ user.fullName }}
+      </div>
+
+      <div style="flex: 1.5" class="user-fullname">
+        {{ user.email }}
+      </div>
+
+      <div style="flex: 1" class="user-fullname">
+        {{ user.status }}
+      </div>
+
+      <div style="flex: 1" class="user-fullname">
+        {{ user.provider }}
+      </div>
+
+      <div style="flex: 1.5; font-size: 11px; opacity: 0.7">
+        {{ user.userId }}
+      </div>
+
+      <div style="width: 80px">
+        <button class="delete-btn" (click)="deleteUser(user.userId)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+            <path d="M2 4h12M6 7v5M10 7v5" />
+          </svg>
+          Delete
+        </button>
+      </div>
     </div>
   </div>
 </div>

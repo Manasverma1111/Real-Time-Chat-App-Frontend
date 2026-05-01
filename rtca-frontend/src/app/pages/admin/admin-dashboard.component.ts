@@ -12,6 +12,8 @@ import { Router } from '@angular/router';
 export class AdminDashboardComponent implements OnInit {
   users: any[] = [];
   loading = false;
+  superAdmin: any = null;
+  normalUsers: any[] = [];
 
   constructor(
     private api: ApiService,
@@ -30,12 +32,17 @@ export class AdminDashboardComponent implements OnInit {
       next: (res: any) => {
         // ✅ handle both array & wrapped response safely
         //
-        this.users = (Array.isArray(res) ? res : res?.data || []).sort((a: any, b: any) => {
-          // SUPER_ADMIN first
-          if (a.role === 'SUPER_ADMIN') return -1;
-          if (b.role === 'SUPER_ADMIN') return 1;
-          return 0;
-        });
+        // this.users = (Array.isArray(res) ? res : res?.data || []).sort((a: any, b: any) => {
+        //   // SUPER_ADMIN first
+        //   if (a.role === 'SUPER_ADMIN') return -1;
+        //   if (b.role === 'SUPER_ADMIN') return 1;
+        //   return 0;
+        // });
+        const data = Array.isArray(res) ? res : res?.data || [];
+
+        // ✅ separate SUPER_ADMIN and others
+        this.superAdmin = data.find((u: any) => u.role === 'SUPER_ADMIN') || null;
+        this.normalUsers = data.filter((u: any) => u.role !== 'SUPER_ADMIN');
 
         this.loading = false;
 
