@@ -234,6 +234,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.currentUser = getUser();
     this.connectSocket();
     this.loadRooms();
+    // window.addEventListener('beforeunload', this.handleWindowClose);
   }
 
   ngOnDestroy() {
@@ -242,7 +243,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
+    // window.removeEventListener('beforeunload', this.handleWindowClose);
   }
+
+  // handleWindowClose = () => {
+  //   const userId = sessionStorage.getItem('userId');
+
+  //   if (userId) {
+  //     navigator.sendBeacon('http://localhost:8087/presence/offline/' + userId);
+  //   }
+  // };
 
   loadRooms() {
     this.loadingRooms = true;

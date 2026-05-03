@@ -234,6 +234,7 @@ export class SidebarComponent {
   }
 
   handleLogout() {
+    // ✅ delegate logout to parent (ChatComponent)
     this.logout.emit();
   }
 
