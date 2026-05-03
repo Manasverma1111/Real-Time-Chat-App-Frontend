@@ -7,6 +7,9 @@ import { Client } from '@stomp/stompjs';
 export class SocketService {
   private stompClient: Client | null = null;
 
+  // ✅ NEW: queue messages until connected
+  private pendingMessages: any[] = [];
+
   connect(token: string, onConnect?: () => void, onError?: (err: any) => void) {
     this.stompClient = new Client({
       brokerURL: 'ws://localhost:8087/ws',
@@ -25,6 +28,11 @@ export class SocketService {
 
       onConnect: () => {
         console.log('WebSocket connected');
+
+        // ✅ SEND QUEUED MESSAGES
+        this.pendingMessages.forEach((msg) => this._publish(msg));
+        this.pendingMessages = [];
+
         onConnect?.();
       },
 
@@ -42,6 +50,24 @@ export class SocketService {
     this.stompClient.activate();
   }
 
+  private _publish(payload: any) {
+    this.stompClient?.publish({
+      destination: '/app/chat.send',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  send(payload: any) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.warn('⚠️ Socket not connected → queued message');
+      this.pendingMessages.push(payload);
+      return;
+    }
+
+    console.log('🚀 Sending message to backend');
+    this._publish(payload);
+  }
+
   subscribe(roomId: string, callback: (msg: any) => void) {
     if (!this.stompClient || !this.stompClient.connected) {
       console.warn('Socket not connected');
@@ -53,9 +79,6 @@ export class SocketService {
     });
   }
 
-  /*
-   TYPING SUBSCRIBE
-  */
   subscribeTyping(roomId: string, callback: (msg: any) => void) {
     if (!this.stompClient || !this.stompClient.connected) {
       console.warn('Socket not connected');
@@ -67,21 +90,6 @@ export class SocketService {
     });
   }
 
-  send(payload: any) {
-    if (!this.stompClient || !this.stompClient.connected) {
-      console.error('Socket not connected');
-      return;
-    }
-
-    this.stompClient.publish({
-      destination: '/app/chat.send',
-      body: JSON.stringify(payload),
-    });
-  }
-
-  /*
-   SEND TYPING EVENT
-  */
   sendTyping(payload: any) {
     if (!this.stompClient || !this.stompClient.connected) {
       return;
