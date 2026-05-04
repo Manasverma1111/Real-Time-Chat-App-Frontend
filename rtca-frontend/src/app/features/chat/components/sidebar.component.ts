@@ -208,6 +208,15 @@ import { isSuperAdmin } from '../../../core/utils/auth.util';
         color: #e07070;
         border-color: rgba(224, 112, 112, 0.2);
       }
+
+      .btn-profile {
+        color: var(--text-primary);
+        border-color: var(--border-subtle);
+      }
+
+      .btn-profile:hover {
+        background: var(--bg-hover);
+      }
     `,
   ],
 })
@@ -219,6 +228,7 @@ export class SidebarComponent {
   @Output() selectRoom = new EventEmitter<any>();
   @Output() logout = new EventEmitter<void>();
   @Output() createRoom = new EventEmitter<void>();
+  @Output() openProfile = new EventEmitter<void>();
 
   search = '';
 

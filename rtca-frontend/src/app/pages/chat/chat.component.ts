@@ -72,7 +72,7 @@ import { RoomService } from '../../core/services/room.service';
       }
 
       .create-room-modal {
-        width: 420px;
+        width: 500px;
         max-width: 92%;
         background: var(--bg-surface);
         border: 1px solid var(--border-subtle);
@@ -221,6 +221,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   private typingSubscription: any;
   private typingTimer: any;
 
+  showProfileModal = false;
+  profileForm = {
+    fullName: '',
+    bio: '',
+    avatarUrl: '',
+  };
+  selectedProfileFile: File | null = null;
+  uploadingProfile = false;
+
   constructor(
     private roomService: RoomService,
     private messageService: MessageService,
@@ -231,7 +240,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.currentUser = getUser();
+    this.loadCurrentUser();
     this.connectSocket();
     this.loadRooms();
     // window.addEventListener('beforeunload', this.handleWindowClose);
@@ -508,26 +517,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // handleLogout() {
-  //   this.socketService.disconnect();
-
-  //   this.authService.logout().subscribe({
-  //     next: () => {
-  //       sessionStorage.removeItem('connecthub_token');
-  //       sessionStorage.removeItem('userId');
-  //       sessionStorage.removeItem('username');
-  //       this.router.navigate(['/login']);
-  //     },
-
-  //     error: () => {
-  //       sessionStorage.removeItem('connecthub_token');
-  //       sessionStorage.removeItem('userId');
-  //       sessionStorage.removeItem('username');
-  //       this.router.navigate(['/login']);
-  //     },
-  //   });
-  // }
-
   // USER SEARCH FOR ADDING MEMBERS TO ROOM
   searchUsers() {
     if (!this.userSearch.trim()) {
@@ -723,6 +712,98 @@ export class ChatComponent implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  // USER PROFILE
+  openProfileModal() {
+    this.profileForm = {
+      fullName: this.currentUser?.fullName || '',
+      bio: this.currentUser?.bio || '',
+      avatarUrl: this.currentUser?.avatarUrl || '',
+    };
+    this.showProfileModal = true;
+  }
+
+  // close profile modal and reset selected file
+  closeProfileModal() {
+    this.showProfileModal = false;
+    this.selectedProfileFile = null;
+  }
+
+  // handle file selection for profile image
+  onProfileFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.selectedProfileFile = file;
+
+    // preview instantly
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.profileForm.avatarUrl = reader.result as string;
+      this.cdr.detectChanges();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // if a new profile image is selected, upload it first and then save profile, otherwise just save profile
+  uploadProfileImageAndSave() {
+    if (!this.selectedProfileFile) {
+      this.saveProfile();
+      return;
+    }
+
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) return;
+
+    this.uploadingProfile = true;
+
+    this.authService.uploadProfileImage(this.selectedProfileFile, userId).subscribe({
+      next: (res: any) => {
+        this.profileForm.avatarUrl = res.filePath;
+        this.saveProfile();
+      },
+      error: (err: any) => {
+        console.error('Profile upload failed:', err);
+        this.uploadingProfile = false;
+      },
+    });
+  }
+
+  // save profile details
+  saveProfile() {
+    this.authService.updateProfile(this.profileForm).subscribe({
+      next: (updatedUser: any) => {
+        this.currentUser = updatedUser;
+
+        // update session
+        sessionStorage.setItem('username', updatedUser.username);
+
+        this.uploadingProfile = false;
+        this.closeProfileModal();
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Profile update failed:', err);
+        this.uploadingProfile = false;
+      },
+    });
+  }
+
+  loadCurrentUser() {
+    this.authService.getCurrentUser().subscribe({
+      next: (user: any) => {
+        this.currentUser = user;
+
+        // sync minimal session data (optional)
+        sessionStorage.setItem('username', user.username);
+
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Failed to load current user:', err);
+      },
     });
   }
 }

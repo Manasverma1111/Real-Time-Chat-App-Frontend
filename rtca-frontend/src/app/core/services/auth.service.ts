@@ -55,4 +55,12 @@ export class AuthService {
   updateProfile(payload: any) {
     return this.api.put('/auth/profile', payload);
   }
+
+  uploadProfileImage(file: File, userId: string) {
+    const formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('file', file);
+
+    return this.api.post('/media/upload/profile', formData);
+  }
 }
