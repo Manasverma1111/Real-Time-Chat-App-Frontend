@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 
@@ -72,4 +72,23 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
 })
 export class MessageBubbleComponent {
   @Input() message: any;
+
+  @Output() deleteForMe = new EventEmitter<string>();
+  @Output() deleteForEveryone = new EventEmitter<string>();
+
+  showMenu = false;
+
+  toggleMenu() {
+    this.showMenu = !this.showMenu;
+  }
+
+  handleDeleteForMe() {
+    this.deleteForMe.emit(this.message?.id);
+    this.showMenu = false;
+  }
+
+  handleDeleteForEveryone() {
+    this.deleteForEveryone.emit(this.message?.id);
+    this.showMenu = false;
+  }
 }

@@ -196,6 +196,7 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Output() sendMessage = new EventEmitter<string>();
   @Output() typing = new EventEmitter<void>();
   @Output() uploadFile = new EventEmitter<File>();
+  @Output() deleteMessage = new EventEmitter<string>();
 
   /*
    NEW EVENTS FOR ROOM MEMBER MANAGEMENT
@@ -203,6 +204,7 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Output() viewMembers = new EventEmitter<void>();
   @Output() leaveRoom = new EventEmitter<void>();
   @Output() deleteRoom = new EventEmitter<void>();
+  @Output() deleteForEveryone = new EventEmitter<string>();
 
   @ViewChild('scrollEnd') scrollEnd!: ElementRef;
 
@@ -262,5 +264,13 @@ export class ChatWindowComponent implements AfterViewChecked {
     this.uploadFile.emit(file);
 
     input.value = '';
+  }
+
+  handleDeleteMessage(messageId: string) {
+    this.deleteMessage.emit(messageId);
+  }
+
+  handleDeleteForEveryone(messageId: string) {
+    this.deleteForEveryone.emit(messageId);
   }
 }

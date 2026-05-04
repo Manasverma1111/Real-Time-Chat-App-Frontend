@@ -10,7 +10,12 @@
   <!-- Messages -->
   <div class="messages-area">
     <ng-container *ngIf="messages.length > 0; else emptyState">
-      <app-message-bubble *ngFor="let msg of messages" [message]="msg"></app-message-bubble>
+      <app-message-bubble
+        *ngFor="let message of messages"
+        [message]="message"
+        (deleteForMe)="handleDeleteMessage($event)"
+        (deleteForEveryone)="handleDeleteForEveryone($event)"
+      ></app-message-bubble>
       <div #scrollEnd></div>
     </ng-container>
 

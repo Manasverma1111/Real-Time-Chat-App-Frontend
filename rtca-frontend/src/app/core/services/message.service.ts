@@ -32,4 +32,9 @@ export class MessageService {
   getRoomMedia(roomId: string) {
     return this.api.get(`/media/room/${roomId}`);
   }
+
+  // delete message for everyone
+  deleteMessageForMe(messageId: string) {
+    return this.api.put(`/messages/${messageId}/delete/me`, {});
+  }
 }

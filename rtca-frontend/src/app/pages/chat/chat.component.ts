@@ -806,4 +806,14 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  deleteMessageForMe(messageId: string) {
+    this.messageService.deleteMessageForMe(messageId).subscribe(() => {
+      this.messages = this.messages.filter((m) => m.id !== messageId);
+    });
+  }
+
+  deleteMessageForEveryone(messageId: string) {
+    console.log('Delete for everyone:', messageId);
+  }
 }

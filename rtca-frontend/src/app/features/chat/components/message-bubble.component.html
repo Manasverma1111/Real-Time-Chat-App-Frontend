@@ -13,6 +13,49 @@
     style="width: 28px; flex-shrink: 0"
   ></div>
 
+  <!-- ✅ 3 DOT MENU (ONLY OWN MESSAGE — BEFORE BUBBLE) -->
+  <div *ngIf="message?.isOwn" style="position: relative; margin-right: 4px">
+    <!-- 3 dots -->
+    <button
+      (click)="toggleMenu()"
+      style="
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-size: 16px;
+        padding: 4px;
+        line-height: 1;
+      "
+    >
+      ⋮
+    </button>
+
+    <!-- Dropdown -->
+    <div
+      *ngIf="showMenu"
+      style="
+        position: absolute;
+        right: 0;
+        top: 22px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        z-index: 10;
+        min-width: 160px;
+      "
+    >
+      <div (click)="handleDeleteForMe()" style="padding: 8px 12px; cursor: pointer">
+        Delete for me
+      </div>
+
+      <div (click)="handleDeleteForEveryone()" style="padding: 8px 12px; cursor: pointer">
+        Delete for everyone
+      </div>
+    </div>
+  </div>
+
   <!-- Message Bubble -->
   <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
     <div *ngIf="!message?.isOwn" class="sender-name">

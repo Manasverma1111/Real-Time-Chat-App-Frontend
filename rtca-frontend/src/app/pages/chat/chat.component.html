@@ -21,6 +21,8 @@
       (viewMembers)="handleViewMembers()"
       (leaveRoom)="handleLeaveRoom()"
       (deleteRoom)="handleDeleteRoom()"
+      (deleteMessage)="deleteMessageForMe($event)"
+      (deleteForEveryone)="deleteMessageForEveryone($event)"
     ></app-chat-window>
   </div>
 
