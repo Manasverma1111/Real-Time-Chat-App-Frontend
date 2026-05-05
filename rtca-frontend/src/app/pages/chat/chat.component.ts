@@ -816,4 +816,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   deleteMessageForEveryone(messageId: string) {
     console.log('Delete for everyone:', messageId);
   }
+
+  handleReaction(event: { messageId: string; emoji: string }) {
+    this.messageService.reactToMessage(event.messageId, event.emoji).subscribe(() => {
+      this.loadMessages(this.selectedRoom?.id); // 🔥 REQUIRED
+    });
+  }
 }

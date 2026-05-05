@@ -33,8 +33,12 @@ export class MessageService {
     return this.api.get(`/media/room/${roomId}`);
   }
 
-  // delete message for everyone
+  // delete message for me
   deleteMessageForMe(messageId: string) {
     return this.api.put(`/messages/${messageId}/delete/me`, {});
+  }
+
+  reactToMessage(messageId: string, emoji: string) {
+    return this.api.put(`/messages/${messageId}/react?emoji=${emoji}`, {});
   }
 }

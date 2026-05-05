@@ -75,8 +75,10 @@ export class MessageBubbleComponent {
 
   @Output() deleteForMe = new EventEmitter<string>();
   @Output() deleteForEveryone = new EventEmitter<string>();
+  @Output() react = new EventEmitter<{ messageId: string; emoji: string }>();
 
   showMenu = false;
+  showReactions = false;
 
   toggleMenu() {
     this.showMenu = !this.showMenu;
@@ -90,5 +92,19 @@ export class MessageBubbleComponent {
   handleDeleteForEveryone() {
     this.deleteForEveryone.emit(this.message?.id);
     this.showMenu = false;
+  }
+
+  // Reactions
+  toggleReactionMenu() {
+    this.showReactions = !this.showReactions;
+  }
+
+  // emoji is the short code like 'thumbs_up'
+  handleReaction(emoji: string) {
+    this.react.emit({
+      messageId: this.message?.id,
+      emoji,
+    });
+    this.showReactions = false;
   }
 }

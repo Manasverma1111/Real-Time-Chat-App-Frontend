@@ -197,6 +197,7 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Output() typing = new EventEmitter<void>();
   @Output() uploadFile = new EventEmitter<File>();
   @Output() deleteMessage = new EventEmitter<string>();
+  @Output() reactMessage = new EventEmitter<{ messageId: string; emoji: string }>();
 
   /*
    NEW EVENTS FOR ROOM MEMBER MANAGEMENT
@@ -272,5 +273,9 @@ export class ChatWindowComponent implements AfterViewChecked {
 
   handleDeleteForEveryone(messageId: string) {
     this.deleteForEveryone.emit(messageId);
+  }
+
+  handleReaction(event: { messageId: string; emoji: string }) {
+    this.reactMessage.emit(event);
   }
 }

@@ -15,6 +15,7 @@
         [message]="message"
         (deleteForMe)="handleDeleteMessage($event)"
         (deleteForEveryone)="handleDeleteForEveryone($event)"
+        (react)="handleReaction($event)"
       ></app-message-bubble>
       <div #scrollEnd></div>
     </ng-container>
