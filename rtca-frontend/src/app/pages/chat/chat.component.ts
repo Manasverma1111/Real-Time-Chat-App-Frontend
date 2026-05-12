@@ -378,6 +378,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
 
       // GROUPING LOGIC FOR NEW MESSAGES
+      console.log('🔥 SOCKET MESSAGE:', msg);
+      console.log('🔥 CONTENT:', msg.content);
+      console.log('🔥 CONTENT TYPE:', typeof msg.content);
       const last = this.messages[this.messages.length - 1];
 
       const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
@@ -423,16 +426,25 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (!userId) return;
 
     const formData = new FormData();
-    formData.append('roomId', this.selectedRoom.roomId);
+
+    formData.append('roomId', this.selectedRoom.id);
     formData.append('senderId', userId);
     formData.append('file', file);
 
     this.messageService.uploadMedia(formData).subscribe({
       next: (res: any) => {
-        /*
-       Send uploaded file URL as chat message
-      */
-        this.sendMessage(res.filePath);
+        console.log('✅ Upload response:', res);
+
+        // IMPORTANT:
+        // small delay ensures websocket subscription is active
+        setTimeout(() => {
+          this.socketService.send({
+            roomId: this.selectedRoom.id,
+            senderId: userId,
+            senderName: sessionStorage.getItem('username') || 'User',
+            content: res.filePath,
+          });
+        }, 300);
       },
 
       error: (err: any) => {

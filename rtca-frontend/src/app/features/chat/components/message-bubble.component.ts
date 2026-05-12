@@ -32,6 +32,7 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
         border-radius: var(--radius-lg);
         position: relative;
         line-height: 1.5;
+        overflow: hidden;
       }
 
       .bubble.other {
@@ -66,6 +67,44 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
         text-align: right;
         margin-top: 5px;
         opacity: 0.55;
+      }
+
+      .media-image {
+        display: block;
+        width: 320px;
+        max-width: 100%;
+        height: auto;
+        border-radius: 12px;
+        margin-top: 6px;
+        object-fit: contain;
+        cursor: pointer;
+        background: #111;
+      }
+
+      .media-video {
+        width: 100%;
+        max-width: 320px;
+        border-radius: 12px;
+        margin-top: 6px;
+      }
+
+      .media-file {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-subtle);
+      }
+
+      .media-file a {
+        color: inherit;
+        text-decoration: none;
+        font-size: 13px;
+        word-break: break-word;
+      }
+
+      .media-file a:hover {
+        text-decoration: underline;
       }
     `,
   ],
@@ -106,5 +145,48 @@ export class MessageBubbleComponent {
       emoji,
     });
     this.showReactions = false;
+  }
+
+  /*
+ MEDIA TYPE HELPERS
+ More robust media detection for S3 URLs
+*/
+
+  isImage(content: string): boolean {
+    if (!content) return false;
+
+    const url = content.toLowerCase();
+
+    return (
+      url.includes('.jpg') ||
+      url.includes('.jpeg') ||
+      url.includes('.png') ||
+      url.includes('.gif') ||
+      url.includes('.webp')
+    );
+  }
+
+  isVideo(content: string): boolean {
+    if (!content) return false;
+
+    const url = content.toLowerCase();
+
+    return (
+      url.includes('.mp4') || url.includes('.webm') || url.includes('.ogg') || url.includes('.mov')
+    );
+  }
+
+  isFile(content: string): boolean {
+    if (!content) return false;
+
+    return content.startsWith('http') && !this.isImage(content) && !this.isVideo(content);
+  }
+
+  getFileName(url: string): string {
+    try {
+      return decodeURIComponent(url.split('/').pop() || 'file');
+    } catch {
+      return 'file';
+    }
   }
 }

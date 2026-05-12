@@ -1,5 +1,4 @@
 <div class="bubble-row" [class.own]="message?.isOwn" [class.group-gap]="message?.isFirstInGroup">
-
   <!-- Avatar -->
   <app-avatar
     *ngIf="!message?.isOwn && message?.isFirstInGroup"
@@ -18,7 +17,7 @@
   <div
     *ngIf="message?.isOwn"
     class="bubble-actions"
-    style="display: flex; align-items: center; gap: 2px; position: relative;"
+    style="display: flex; align-items: center; gap: 2px; position: relative"
   >
     <!-- 😊 -->
     <button
@@ -32,7 +31,9 @@
         padding: 4px;
         line-height: 1;
       "
-    >😊</button>
+    >
+      😊
+    </button>
 
     <!-- EMOJI PICKER (opens upward, anchored right) -->
     <div
@@ -69,7 +70,9 @@
         padding: 4px;
         line-height: 1;
       "
-    >⋮</button>
+    >
+      ⋮
+    </button>
 
     <!-- CONTEXT MENU -->
     <div
@@ -101,11 +104,42 @@
     <div *ngIf="!message?.isOwn" class="sender-name">
       {{ message?.senderName || 'User' }}
     </div>
-
+    <!-- 
     <div class="bubble-text">
       {{ message?.content }}
-    </div>
+    </div> -->
 
+    <div class="bubble-text">
+      <!-- IMAGE MESSAGE -->
+      <img
+        *ngIf="isImage(message?.content)"
+        [src]="message?.content"
+        class="media-image"
+        alt="uploaded-image"
+      />
+
+      <!-- VIDEO MESSAGE -->
+      <video *ngIf="isVideo(message?.content)" class="media-video" controls>
+        <source [src]="message?.content" />
+      </video>
+
+      <!-- FILE MESSAGE -->
+      <div
+        *ngIf="isFile(message?.content) && !isImage(message?.content) && !isVideo(message?.content)"
+        class="media-file"
+      >
+        <a [href]="message?.content" target="_blank"> 📎 {{ getFileName(message?.content) }} </a>
+      </div>
+
+      <!-- NORMAL TEXT -->
+      <span
+        *ngIf="
+          !isImage(message?.content) && !isVideo(message?.content) && !isFile(message?.content)
+        "
+      >
+        {{ message?.content }}
+      </span>
+    </div>
     <div class="bubble-time">
       {{ message?.createdAt | date: 'shortTime' }}
       <span *ngIf="message?.isOwn">
@@ -118,7 +152,7 @@
   <div
     *ngIf="!message?.isOwn"
     class="bubble-actions"
-    style="display: flex; align-items: center; position: relative;"
+    style="display: flex; align-items: center; position: relative"
   >
     <!-- 😊 -->
     <button
@@ -132,7 +166,9 @@
         padding: 4px;
         line-height: 1;
       "
-    >😊</button>
+    >
+      😊
+    </button>
 
     <!-- EMOJI PICKER (opens upward, anchored left) -->
     <div
@@ -157,7 +193,6 @@
       <span (click)="handleReaction('😮')" style="cursor: pointer; font-size: 16px">😮</span>
     </div>
   </div>
-
 </div>
 
 <!-- ✅ REACTIONS (OUTSIDE ROW — UNCHANGED) -->
@@ -166,13 +201,13 @@
     <div
       *ngIf="reactionsList.length > 0"
       [ngStyle]="{
-        'margin-left':  message?.isOwn ? 'auto' : '42px',
+        'margin-left': message?.isOwn ? 'auto' : '42px',
         'margin-right': message?.isOwn ? '42px' : '0',
         'justify-content': message?.isOwn ? 'flex-end' : 'flex-start',
         display: 'flex',
         gap: '6px',
         'flex-wrap': 'wrap',
-        'margin-top': '2px'
+        'margin-top': '2px',
       }"
     >
       <div
