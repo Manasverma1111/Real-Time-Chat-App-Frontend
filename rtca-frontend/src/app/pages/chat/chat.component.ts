@@ -189,6 +189,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   rooms: any[] = [];
   selectedRoom: any = null;
   messages: any[] = [];
+  publicGroups: any[] = [];
   loadingRooms = false;
 
   socketConnected = false;
@@ -198,6 +199,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   showCreateRoomModal = false;
   newRoomName = '';
   newRoomType = 'GROUP';
+  newRoomVisibility = 'PRIVATE';
+  newRoomDescription = '';
 
   // User info
   currentUser: any = null;
@@ -243,6 +246,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.loadCurrentUser();
     this.connectSocket();
     this.loadRooms();
+    this.loadPublicGroups();
     // window.addEventListener('beforeunload', this.handleWindowClose);
   }
 
@@ -270,18 +274,47 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (data: any) => {
         this.rooms = (data || []).map((room: any) => ({
           id: room.roomId,
+          roomId: room.roomId, // keep original backend id
           name: room.name,
           type: room.type,
 
           /*
-         FINAL FIX:
-         keep memberCount + onlineCount from backend
+         keep backend room stats
         */
           memberCount: room.memberCount || 0,
           onlineCount: room.onlineCount || 0,
           lastMessage: 'No messages yet',
         }));
 
+        /*
+       RESTORE PREVIOUSLY SELECTED ROOM
+       after refresh/page reload
+      */
+        const currentUserId = sessionStorage.getItem('userId');
+
+        const savedRoomId = currentUserId
+          ? localStorage.getItem(`selectedRoomId_${currentUserId}`)
+          : null;
+
+        if (savedRoomId) {
+          const matchedRoom = this.rooms.find(
+            (room: any) => String(room.roomId) === String(savedRoomId),
+          );
+
+          if (matchedRoom) {
+            this.selectRoom(matchedRoom);
+
+            this.loadingRooms = false;
+            this.cdr.detectChanges();
+            return;
+          }
+        }
+
+        /*
+       FALLBACK:
+       open first room only if
+       no saved room exists
+      */
         if (this.rooms.length > 0) {
           this.selectRoom(this.rooms[0]);
         }
@@ -301,10 +334,27 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (!room) return;
 
     this.selectedRoom = room;
+
+    /*
+   PERSIST CURRENT ROOM
+   so refresh restores same room
+  */
+    const currentUserId = sessionStorage.getItem('userId');
+
+    if (currentUserId) {
+      localStorage.setItem(`selectedRoomId_${currentUserId}`, room.roomId || room.id);
+    }
+
     this.loadMessages(room.id);
+
     this.subscribeToRoom(room.id);
-    // typing subscription should be separate so that it doesn't interfere with message subscription
+
+    /*
+   typing subscription separate
+   from message subscription
+  */
     this.subscribeTyping(room.id);
+
     this.cdr.detectChanges();
   }
 
@@ -482,6 +532,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         name: this.newRoomName.trim(),
         type: this.newRoomType,
         memberIds: this.selectedMembers.map((m) => m.userId),
+        visibility: this.newRoomVisibility,
+        description: this.newRoomDescription,
       })
       .subscribe({
         next: () => {
@@ -495,6 +547,38 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.creatingRoom = false;
         },
       });
+  }
+
+  loadPublicGroups() {
+    this.roomService.getPublicGroups().subscribe({
+      next: (groups: any) => {
+        this.publicGroups = groups || [];
+      },
+      error: (err) => {
+        console.error('Failed to load public groups', err);
+      },
+    });
+  }
+
+  joinGroup(room: any) {
+    this.roomService.joinPublicGroup(room.roomId).subscribe({
+      next: () => {
+        /*
+       Reload user rooms
+      */
+        this.loadRooms();
+        this.loadPublicGroups();
+
+        /*
+       Remove joined group from explore list
+      */
+        this.publicGroups = this.publicGroups.filter((g) => g.roomId !== room.roomId);
+      },
+
+      error: (err) => {
+        console.error('Failed to join group', err);
+      },
+    });
   }
 
   // LOGOUT

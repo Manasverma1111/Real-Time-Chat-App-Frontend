@@ -3,10 +3,12 @@
     [rooms]="rooms"
     [selectedRoom]="selectedRoom"
     [loadingRooms]="loadingRooms"
+    [publicGroups]="publicGroups"
     (selectRoom)="selectRoom($event)"
     (logout)="handleLogout()"
     (createRoom)="handleCreateRoom()"
     (openProfile)="openProfileModal()"
+    (joinGroup)="joinGroup($event)"
   ></app-sidebar>
 
   <div class="chat-main">
@@ -49,6 +51,30 @@
           <option value="GROUP">Group</option>
           <option value="DM">Direct Message</option>
         </select>
+      </div>
+
+      <!-- ROOM VISIBILITY -->
+
+      <div class="form-group" *ngIf="newRoomType === 'GROUP'">
+        <label class="form-label">Visibility</label>
+
+        <select [(ngModel)]="newRoomVisibility" class="form-select">
+          <option value="PRIVATE">Private</option>
+          <option value="PUBLIC">Public</option>
+        </select>
+      </div>
+
+      <!-- GROUP DESCRIPTION -->
+
+      <div class="form-group" *ngIf="newRoomType === 'GROUP'">
+        <label class="form-label">Description</label>
+
+        <input
+          [(ngModel)]="newRoomDescription"
+          class="form-input"
+          maxlength="300"
+          placeholder="Describe your group"
+        />
       </div>
 
       <!-- ADD MEMBERS -->

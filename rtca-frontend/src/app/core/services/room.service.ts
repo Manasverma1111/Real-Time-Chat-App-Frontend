@@ -38,4 +38,16 @@ export class RoomService {
   deleteRoom(roomId: string) {
     return this.api.delete(`/rooms/${roomId}`);
   }
+
+  /*
+ PUBLIC GROUPS
+*/
+
+  getPublicGroups() {
+    return this.api.get('/rooms/public');
+  }
+
+  joinPublicGroup(roomId: string) {
+    return this.api.post(`/rooms/${roomId}/join`, {});
+  }
 }

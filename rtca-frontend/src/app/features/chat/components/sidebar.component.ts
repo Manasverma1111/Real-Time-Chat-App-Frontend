@@ -224,11 +224,13 @@ export class SidebarComponent {
   @Input() rooms: any[] = [];
   @Input() selectedRoom: any;
   @Input() loadingRooms: boolean = false;
+  @Input() publicGroups: any[] = [];
 
   @Output() selectRoom = new EventEmitter<any>();
   @Output() logout = new EventEmitter<void>();
   @Output() createRoom = new EventEmitter<void>();
   @Output() openProfile = new EventEmitter<void>();
+  @Output() joinGroup = new EventEmitter<any>();
 
   search = '';
 
@@ -258,5 +260,9 @@ export class SidebarComponent {
 
   get isAdmin() {
     return isSuperAdmin();
+  }
+
+  handleJoinGroup(room: any) {
+    this.joinGroup.emit(room);
   }
 }
