@@ -109,6 +109,9 @@ export class ChatHeaderComponent {
   @Output() viewMembers = new EventEmitter<void>();
   @Output() leaveRoom = new EventEmitter<void>();
   @Output() deleteRoom = new EventEmitter<void>();
+  @Output() openGroupDetails = new EventEmitter<void>();
+
+  menuOpen = false;
 
   get initials(): string {
     return (
@@ -140,5 +143,14 @@ export class ChatHeaderComponent {
 
   handleDeleteRoom() {
     this.deleteRoom.emit();
+  }
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  handleOpenGroupDetails() {
+    this.menuOpen = false;
+    this.openGroupDetails.emit();
   }
 }

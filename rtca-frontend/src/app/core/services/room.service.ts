@@ -50,4 +50,29 @@ export class RoomService {
   joinPublicGroup(roomId: string) {
     return this.api.post(`/rooms/${roomId}/join`, {});
   }
+
+  /*
+   GROUP DETAILS
+  */
+
+  getRoomDetails(roomId: string) {
+    return this.api.get(`/rooms/${roomId}`);
+  }
+
+  updateRoom(roomId: string, payload: any) {
+    return this.api.put(`/rooms/${roomId}`, payload);
+  }
+
+  uploadGroupAvatar(roomId: string, file: File) {
+    const formData = new FormData();
+
+    formData.append('roomId', roomId);
+    formData.append('file', file);
+
+    return this.api.post('/media/upload/group', formData);
+  }
+
+  updateRoomAvatar(roomId: string, avatarUrl: string) {
+    return this.api.put(`/rooms/${roomId}/avatar?avatarUrl=${encodeURIComponent(avatarUrl)}`, {});
+  }
 }

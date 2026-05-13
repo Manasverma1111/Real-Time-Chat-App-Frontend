@@ -233,6 +233,23 @@ export class ChatComponent implements OnInit, OnDestroy {
   selectedProfileFile: File | null = null;
   uploadingProfile = false;
 
+  /*
+   GROUP DETAILS MODAL
+  */
+  showGroupDetailsModal = false;
+  groupDetails: any = null;
+
+  groupForm = {
+    name: '',
+    description: '',
+    visibility: 'PRIVATE',
+    avatarUrl: '',
+  };
+
+  selectedGroupFile: File | null = null;
+  uploadingGroupAvatar = false;
+  isCurrentUserRoomAdmin = false;
+
   constructor(
     private roomService: RoomService,
     private messageService: MessageService,
@@ -901,6 +918,205 @@ export class ChatComponent implements OnInit, OnDestroy {
         console.error('Failed to load current user:', err);
       },
     });
+  }
+
+  /*
+ OPEN GROUP DETAILS
+*/
+  openGroupDetailsModal() {
+    if (!this.selectedRoom) return;
+
+    this.roomService.getRoomDetails(this.selectedRoom.id).subscribe({
+      next: (room: any) => {
+        this.groupDetails = room;
+
+        /*
+       CHECK IF CURRENT USER IS ADMIN
+      */
+        const currentUserId = sessionStorage.getItem('userId');
+
+        this.isCurrentUserRoomAdmin = String(room.createdBy) === String(currentUserId);
+
+        this.groupForm = {
+          name: room.name || '',
+          description: room.description || '',
+          visibility: room.visibility || 'PRIVATE',
+          avatarUrl: room.avatarUrl || '',
+        };
+
+        this.showGroupDetailsModal = true;
+
+        this.cdr.detectChanges();
+      },
+
+      error: (err: any) => {
+        console.error('Failed to load group details:', err);
+      },
+    });
+  }
+
+  /*
+   CLOSE GROUP DETAILS
+  */
+  closeGroupDetailsModal() {
+    this.showGroupDetailsModal = false;
+    this.selectedGroupFile = null;
+  }
+
+  /*
+   GROUP IMAGE SELECT
+  */
+  onGroupFileSelected(event: any) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    this.selectedGroupFile = file;
+
+    /*
+     instant preview
+    */
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.groupForm.avatarUrl = reader.result as string;
+
+      this.cdr.detectChanges();
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  /*
+   SAVE GROUP DETAILS
+  */
+  /*
+ SAVE GROUP DETAILS
+*/
+  saveGroupDetails() {
+    /*
+   EXTRA FRONTEND SECURITY
+   prevent non-admin users
+  */
+    if (!this.isCurrentUserRoomAdmin) {
+      return;
+    }
+
+    if (!this.selectedRoom) return;
+
+    /*
+   upload image first if selected
+  */
+    if (this.selectedGroupFile) {
+      this.uploadingGroupAvatar = true;
+
+      this.roomService.uploadGroupAvatar(this.selectedRoom.id, this.selectedGroupFile).subscribe({
+        next: (res: any) => {
+          this.roomService.updateRoomAvatar(this.selectedRoom.id, res.filePath).subscribe({
+            next: () => {
+              this.groupForm.avatarUrl = res.filePath;
+
+              this.updateRoomDetailsOnly();
+            },
+
+            error: (err: any) => {
+              console.error('Failed to update avatar:', err);
+
+              this.uploadingGroupAvatar = false;
+            },
+          });
+        },
+
+        error: (err: any) => {
+          console.error('Group avatar upload failed:', err);
+
+          this.uploadingGroupAvatar = false;
+        },
+      });
+
+      return;
+    }
+
+    this.updateRoomDetailsOnly();
+  }
+
+  /*
+ UPDATE ROOM INFO
+*/
+  updateRoomDetailsOnly() {
+    if (!this.selectedRoom) return;
+
+    this.roomService
+      .updateRoom(this.selectedRoom.id, {
+        name: this.groupForm.name,
+        description: this.groupForm.description,
+        visibility: this.groupForm.visibility,
+      })
+      .subscribe({
+        next: (updatedRoom: any) => {
+          /*
+         PRESERVE LIVE ROOM COUNTS
+         because backend update API
+         does not return transient fields
+        */
+          this.selectedRoom = {
+            ...this.selectedRoom,
+
+            /*
+           updated editable fields
+          */
+            name: updatedRoom.name,
+            description: updatedRoom.description,
+            visibility: updatedRoom.visibility,
+            avatarUrl: updatedRoom.avatarUrl,
+
+            /*
+           preserve live stats
+          */
+            memberCount: this.selectedRoom.memberCount,
+            onlineCount: this.selectedRoom.onlineCount,
+          };
+
+          /*
+         sync room list
+        */
+          this.rooms = this.rooms.map((room) => {
+            if (String(room.roomId) === String(updatedRoom.roomId)) {
+              return {
+                ...room,
+
+                /*
+               updated editable fields
+              */
+                name: updatedRoom.name,
+                description: updatedRoom.description,
+                visibility: updatedRoom.visibility,
+                avatarUrl: updatedRoom.avatarUrl,
+
+                /*
+               preserve live stats
+              */
+                memberCount: room.memberCount,
+                onlineCount: room.onlineCount,
+              };
+            }
+
+            return room;
+          });
+
+          this.uploadingGroupAvatar = false;
+
+          this.closeGroupDetailsModal();
+
+          this.cdr.detectChanges();
+        },
+
+        error: (err: any) => {
+          console.error('Failed to update room:', err);
+
+          this.uploadingGroupAvatar = false;
+        },
+      });
   }
 
   deleteMessageForMe(messageId: string) {

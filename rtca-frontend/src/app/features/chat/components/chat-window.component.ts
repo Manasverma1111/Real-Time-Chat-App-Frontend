@@ -198,6 +198,7 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Output() uploadFile = new EventEmitter<File>();
   @Output() deleteMessage = new EventEmitter<string>();
   @Output() reactMessage = new EventEmitter<{ messageId: string; emoji: string }>();
+  @Output() openGroupDetails = new EventEmitter<void>();
 
   /*
    NEW EVENTS FOR ROOM MEMBER MANAGEMENT

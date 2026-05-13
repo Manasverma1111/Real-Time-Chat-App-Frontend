@@ -23,6 +23,7 @@
       (viewMembers)="handleViewMembers()"
       (leaveRoom)="handleLeaveRoom()"
       (deleteRoom)="handleDeleteRoom()"
+      (openGroupDetails)="openGroupDetailsModal()"
       (deleteMessage)="deleteMessageForMe($event)"
       (deleteForEveryone)="deleteMessageForEveryone($event)"
       (reactMessage)="handleReaction($event)"
@@ -162,6 +163,125 @@
       <div class="modal-actions">
         <button class="btn-cancel" (click)="closeMembersModal()">Close</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP DETAILS MODAL -->
+
+<div *ngIf="showGroupDetailsModal" class="modal-backdrop">
+  <div class="create-room-modal">
+    <div class="modal-title">Group Details</div>
+
+    <div class="modal-subtitle">View and edit group information</div>
+
+    <!-- READ ONLY NOTICE -->
+
+    <div
+      *ngIf="!isCurrentUserRoomAdmin"
+      style="margin-top: 10px; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary)"
+    >
+      Only group admins can edit settings
+    </div>
+
+    <!-- GROUP IMAGE -->
+
+    <div class="form-group" style="text-align: center">
+      <img
+        [src]="groupForm.avatarUrl || 'https://via.placeholder.com/90'"
+        style="
+          width: 90px;
+          height: 90px;
+          border-radius: 50%;
+          object-fit: cover;
+          margin-bottom: 12px;
+        "
+      />
+
+      <!-- ONLY ADMIN CAN CHANGE IMAGE -->
+
+      <input *ngIf="isCurrentUserRoomAdmin" type="file" (change)="onGroupFileSelected($event)" />
+    </div>
+
+    <!-- GROUP NAME -->
+
+    <div class="form-group">
+      <label class="form-label"> Group Name </label>
+
+      <input [(ngModel)]="groupForm.name" class="form-input" [disabled]="!isCurrentUserRoomAdmin" />
+    </div>
+
+    <!-- DESCRIPTION -->
+
+    <div class="form-group">
+      <label class="form-label"> Group Description </label>
+
+      <input
+        [(ngModel)]="groupForm.description"
+        class="form-input"
+        [disabled]="!isCurrentUserRoomAdmin"
+      />
+    </div>
+
+    <!-- VISIBILITY -->
+
+    <div class="form-group">
+      <label class="form-label"> Visibility </label>
+
+      <select
+        [(ngModel)]="groupForm.visibility"
+        class="form-select"
+        [disabled]="!isCurrentUserRoomAdmin"
+      >
+        <option value="PRIVATE">Private</option>
+
+        <option value="PUBLIC">Public</option>
+      </select>
+    </div>
+
+    <!-- ADMIN -->
+
+    <div class="form-group">
+      <label class="form-label"> Group Admin </label>
+
+      <div class="form-input">
+        {{ groupDetails?.adminName || 'Unknown' }}
+      </div>
+    </div>
+
+    <!-- STATS -->
+
+    <div class="form-group">
+      <label class="form-label"> Members </label>
+
+      <div class="form-input">
+        {{ groupDetails?.memberCount || 0 }}
+        members •
+        {{ groupDetails?.onlineCount || 0 }}
+        online
+      </div>
+    </div>
+
+    <!-- CREATED -->
+
+    <div class="form-group">
+      <label class="form-label"> Created At </label>
+
+      <div class="form-input">
+        {{ groupDetails?.createdAt | date: 'medium' }}
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeGroupDetailsModal()">Cancel</button>
+
+      <!-- ONLY ADMIN CAN SAVE -->
+
+      <button *ngIf="isCurrentUserRoomAdmin" class="btn-create" (click)="saveGroupDetails()">
+        {{ uploadingGroupAvatar ? 'Saving...' : 'Save Changes' }}
+      </button>
     </div>
   </div>
 </div>
