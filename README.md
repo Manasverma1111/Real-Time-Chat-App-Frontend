@@ -31,6 +31,7 @@ The ConnectHub frontend is a **React.js Single-Page Application (SPA)** that con
 ### Prerequisites
 - Node.js 18+
 - npm 9+
+- Angular CLI 17+
 
 ### Installation
 
