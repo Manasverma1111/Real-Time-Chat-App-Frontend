@@ -11,6 +11,7 @@ import { MessageService } from '../../core/services/message.service';
 import { SocketService } from '../../core/services/socket.service';
 import { AuthService } from '../../core/services/auth.service';
 import { RoomService } from '../../core/services/room.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-chat',
@@ -182,6 +183,159 @@ import { RoomService } from '../../core/services/room.service';
       .member-chip span {
         cursor: pointer;
       }
+
+      /* =========================
+   NOTIFICATION MODAL
+========================= */
+
+      .notification-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(6px);
+        z-index: 99999;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 20px;
+      }
+
+      .notification-modal {
+        width: 100%;
+        max-width: 440px;
+
+        max-height: 80vh;
+
+        background: #12121a;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+
+        border-radius: 20px;
+
+        display: flex;
+        flex-direction: column;
+
+        overflow: hidden;
+
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      }
+
+      .notification-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 18px 20px;
+
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+        flex-shrink: 0;
+      }
+
+      .notification-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: white;
+      }
+
+      .notification-subtitle {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.55);
+
+        margin-top: 4px;
+      }
+
+      .notification-close {
+        width: 34px;
+        height: 34px;
+
+        border: none;
+        border-radius: 10px;
+
+        background: rgba(255, 255, 255, 0.06);
+
+        color: white;
+
+        cursor: pointer;
+
+        transition: 0.2s ease;
+      }
+
+      .notification-close:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .notification-body {
+        overflow-y: auto;
+
+        padding: 14px;
+
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .notification-item {
+        background: rgba(255, 255, 255, 0.04);
+
+        border: 1px solid rgba(255, 255, 255, 0.05);
+
+        border-radius: 14px;
+
+        padding: 14px;
+
+        transition: 0.2s ease;
+      }
+
+      .notification-item.unread {
+        border-color: rgba(212, 175, 55, 0.45);
+
+        background: rgba(212, 175, 55, 0.08);
+      }
+
+      .notification-message {
+        color: white;
+
+        font-size: 14px;
+        line-height: 1.5;
+
+        word-break: break-word;
+      }
+
+      .notification-time {
+        margin-top: 8px;
+
+        font-size: 12px;
+
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      .mark-read-btn {
+        margin-top: 10px;
+
+        border: none;
+
+        background: #d4af37;
+        color: black;
+
+        padding: 8px 12px;
+
+        border-radius: 10px;
+
+        font-size: 12px;
+        font-weight: 600;
+
+        cursor: pointer;
+      }
+
+      .notification-empty {
+        padding: 40px 20px;
+
+        text-align: center;
+
+        color: rgba(255, 255, 255, 0.5);
+      }
     `,
   ],
 })
@@ -250,6 +404,21 @@ export class ChatComponent implements OnInit, OnDestroy {
   uploadingGroupAvatar = false;
   isCurrentUserRoomAdmin = false;
 
+  /*
+   NOTIFICATIONS
+  */
+  notifications: any[] = [];
+  showNotificationsModal = false;
+  unreadNotificationCount = 0;
+
+  /*
+   =========================================
+   REAL-TIME NOTIFICATION SUBSCRIPTION
+   Replaces polling interval
+   =========================================
+  */
+  private notificationSubscription: any;
+
   constructor(
     private roomService: RoomService,
     private messageService: MessageService,
@@ -257,6 +426,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -264,25 +434,33 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.connectSocket();
     this.loadRooms();
     this.loadPublicGroups();
-    // window.addEventListener('beforeunload', this.handleWindowClose);
+
+    /*
+     INITIAL LOAD of existing notifications from DB
+    */
+    this.loadNotifications();
   }
 
   ngOnDestroy() {
+    /*
+     DISCONNECT SOCKET
+    */
     this.socketService.disconnect();
 
+    /*
+     CLEAN ROOM SUBSCRIPTION
+    */
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
-    // window.removeEventListener('beforeunload', this.handleWindowClose);
+
+    /*
+     CLEAN NOTIFICATION SUBSCRIPTION
+    */
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+    }
   }
-
-  // handleWindowClose = () => {
-  //   const userId = sessionStorage.getItem('userId');
-
-  //   if (userId) {
-  //     navigator.sendBeacon('http://localhost:8087/presence/offline/' + userId);
-  //   }
-  // };
 
   loadRooms() {
     this.loadingRooms = true;
@@ -291,22 +469,14 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (data: any) => {
         this.rooms = (data || []).map((room: any) => ({
           id: room.roomId,
-          roomId: room.roomId, // keep original backend id
+          roomId: room.roomId,
           name: room.name,
           type: room.type,
-
-          /*
-         keep backend room stats
-        */
           memberCount: room.memberCount || 0,
           onlineCount: room.onlineCount || 0,
           lastMessage: 'No messages yet',
         }));
 
-        /*
-       RESTORE PREVIOUSLY SELECTED ROOM
-       after refresh/page reload
-      */
         const currentUserId = sessionStorage.getItem('userId');
 
         const savedRoomId = currentUserId
@@ -320,18 +490,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 
           if (matchedRoom) {
             this.selectRoom(matchedRoom);
-
             this.loadingRooms = false;
             this.cdr.detectChanges();
             return;
           }
         }
 
-        /*
-       FALLBACK:
-       open first room only if
-       no saved room exists
-      */
         if (this.rooms.length > 0) {
           this.selectRoom(this.rooms[0]);
         }
@@ -352,10 +516,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.selectedRoom = room;
 
-    /*
-   PERSIST CURRENT ROOM
-   so refresh restores same room
-  */
     const currentUserId = sessionStorage.getItem('userId');
 
     if (currentUserId) {
@@ -363,32 +523,17 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     this.loadMessages(room.id);
-
     this.subscribeToRoom(room.id);
-
-    /*
-   typing subscription separate
-   from message subscription
-  */
     this.subscribeTyping(room.id);
-
     this.cdr.detectChanges();
   }
 
   loadMessages(roomId: string) {
     this.messageService.getMessagesByRoom(roomId).subscribe({
       next: (data: any) => {
-        // this.messages = (data || []).map((msg: any) => ({
-        //   ...msg,
-        //   isOwn: String(msg.senderId) === String(sessionStorage.getItem('userId')),
-        // }));
-
-        // GROUP MESSAGES FROM SAME SENDER TOGETHER
         this.messages = (data || []).map((msg: any, index: number, arr: any[]) => {
           const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
-
           const prev = arr[index - 1];
-
           const isSameSender = prev && String(prev.senderId) === String(msg.senderId);
 
           return {
@@ -398,10 +543,6 @@ export class ChatComponent implements OnInit, OnDestroy {
           };
         });
 
-        /*
-       NEW:
-       mark messages from other users as seen
-      */
         this.messageService.markMessagesAsSeen(roomId).subscribe({
           next: () => {},
           error: (err: any) => {
@@ -426,6 +567,35 @@ export class ChatComponent implements OnInit, OnDestroy {
       () => {
         console.log('Socket connected');
         this.socketConnected = true;
+
+        /*
+         =========================================
+         SUBSCRIBE TO REAL-TIME NOTIFICATIONS
+         once socket is connected and userId known
+         =========================================
+        */
+        const userId = sessionStorage.getItem('userId');
+
+        if (userId) {
+          this.notificationSubscription = this.socketService.subscribeNotifications(
+            userId,
+            (notification: any) => {
+              console.log('🔔 Real-time notification received:', notification);
+
+              /*
+               PREPEND new notification to top of list
+              */
+              this.notifications = [notification, ...this.notifications];
+
+              /*
+               INCREMENT unread badge
+              */
+              this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
+
+              this.cdr.detectChanges();
+            },
+          );
+        }
       },
       (err) => {
         console.error('WebSocket Error:', err);
@@ -444,14 +614,12 @@ export class ChatComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // GROUPING LOGIC FOR NEW MESSAGES
       console.log('🔥 SOCKET MESSAGE:', msg);
       console.log('🔥 CONTENT:', msg.content);
       console.log('🔥 CONTENT TYPE:', typeof msg.content);
+
       const last = this.messages[this.messages.length - 1];
-
       const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
-
       const isSameSender = last && String(last.senderId) === String(msg.senderId);
 
       this.messages = [
@@ -483,17 +651,13 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // MEDIA UPLOAD
-
   uploadMedia(file: File) {
     if (!this.selectedRoom) return;
 
     const userId = sessionStorage.getItem('userId');
-
     if (!userId) return;
 
     const formData = new FormData();
-
     formData.append('roomId', this.selectedRoom.id);
     formData.append('senderId', userId);
     formData.append('file', file);
@@ -502,8 +666,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         console.log('✅ Upload response:', res);
 
-        // IMPORTANT:
-        // small delay ensures websocket subscription is active
         setTimeout(() => {
           this.socketService.send({
             roomId: this.selectedRoom.id,
@@ -520,10 +682,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  /*
-   NEW CREATE ROOM UI
-  */
-
   handleCreateRoom() {
     this.showCreateRoomModal = true;
   }
@@ -532,13 +690,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.showCreateRoomModal = false;
     this.newRoomName = '';
     this.newRoomType = 'GROUP';
-
     this.userSearch = '';
     this.searchedUsers = [];
     this.selectedMembers = [];
   }
 
-  // Submit new room creation
   submitCreateRoom() {
     if (!this.newRoomName.trim() || this.creatingRoom) return;
 
@@ -580,15 +736,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   joinGroup(room: any) {
     this.roomService.joinPublicGroup(room.roomId).subscribe({
       next: () => {
-        /*
-       Reload user rooms
-      */
         this.loadRooms();
         this.loadPublicGroups();
-
-        /*
-       Remove joined group from explore list
-      */
         this.publicGroups = this.publicGroups.filter((g) => g.roomId !== room.roomId);
       },
 
@@ -598,7 +747,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // LOGOUT
   handleLogout() {
     const userId = sessionStorage.getItem('userId');
 
@@ -630,7 +778,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // USER SEARCH FOR ADDING MEMBERS TO ROOM
   searchUsers() {
     if (!this.userSearch.trim()) {
       this.searchedUsers = [];
@@ -660,7 +807,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // SELECT USER TO ADD AS MEMBER
   addMember(user: any) {
     this.selectedMembers = [...this.selectedMembers, user];
     this.userSearch = '';
@@ -670,10 +816,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   removeMember(userId: string) {
     this.selectedMembers = this.selectedMembers.filter((m) => String(m.userId) !== String(userId));
   }
-
-  /*
-   VIEW MEMBERS
-  */
 
   handleViewMembers() {
     if (!this.selectedRoom) return;
@@ -694,10 +836,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.searchedNewMembers = [];
   }
 
-  /*
-   LEAVE ROOM
-  */
-
   handleLeaveRoom() {
     if (!this.selectedRoom) return;
 
@@ -710,10 +848,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  /*
-   DELETE ROOM
-  */
-
   handleDeleteRoom() {
     if (!this.selectedRoom) return;
 
@@ -725,10 +859,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
     });
   }
-
-  /*
- ADD MEMBER INSIDE MEMBERS MODAL
-*/
 
   searchNewMembers() {
     if (!this.memberSearch.trim() || !this.selectedRoom) {
@@ -761,7 +891,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: () => {
         this.memberSearch = '';
         this.searchedNewMembers = [];
-        this.handleViewMembers(); // refresh members list
+        this.handleViewMembers();
       },
 
       error: (err) => {
@@ -770,16 +900,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  /*
- REMOVE MEMBER FROM EXISTING ROOM
-*/
-
   removeMemberFromExistingRoom(memberId: string) {
     if (!this.selectedRoom) return;
 
     this.roomService.removeMemberFromRoom(this.selectedRoom.id, memberId).subscribe({
       next: () => {
-        this.handleViewMembers(); // refresh
+        this.handleViewMembers();
       },
 
       error: (err) => {
@@ -787,8 +913,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
     });
   }
-
-  // TYPING EVENTS
 
   handleTyping() {
     if (!this.selectedRoom) return;
@@ -800,7 +924,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // SUBSCRIBE TO TYPING EVENTS
   subscribeTyping(roomId: string) {
     if (this.typingSubscription) {
       this.typingSubscription.unsubscribe();
@@ -828,30 +951,27 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // USER PROFILE
   openProfileModal() {
     this.profileForm = {
       fullName: this.currentUser?.fullName || '',
       bio: this.currentUser?.bio || '',
-      avatarUrl: this.currentUser?.avatarUrl || '',
+      avatarUrl: this.resolveProfileImage(this.currentUser?.avatarUrl),
     };
+
     this.showProfileModal = true;
   }
 
-  // close profile modal and reset selected file
   closeProfileModal() {
     this.showProfileModal = false;
     this.selectedProfileFile = null;
   }
 
-  // handle file selection for profile image
   onProfileFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
     this.selectedProfileFile = file;
 
-    // preview instantly
     const reader = new FileReader();
     reader.onload = () => {
       this.profileForm.avatarUrl = reader.result as string;
@@ -860,7 +980,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  // if a new profile image is selected, upload it first and then save profile, otherwise just save profile
   uploadProfileImageAndSave() {
     if (!this.selectedProfileFile) {
       this.saveProfile();
@@ -884,15 +1003,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  // save profile details
   saveProfile() {
     this.authService.updateProfile(this.profileForm).subscribe({
       next: (updatedUser: any) => {
         this.currentUser = updatedUser;
-
-        // update session
         sessionStorage.setItem('username', updatedUser.username);
-
         this.uploadingProfile = false;
         this.closeProfileModal();
         this.cdr.detectChanges();
@@ -907,11 +1022,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   loadCurrentUser() {
     this.authService.getCurrentUser().subscribe({
       next: (user: any) => {
-        this.currentUser = user;
+        this.currentUser = {
+          ...user,
+          avatarUrl: this.resolveProfileImage(user?.avatarUrl),
+        };
 
-        // sync minimal session data (optional)
         sessionStorage.setItem('username', user.username);
-
         this.cdr.detectChanges();
       },
       error: (err: any) => {
@@ -921,8 +1037,62 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   /*
- OPEN GROUP DETAILS
-*/
+   =========================================
+   LOAD NOTIFICATIONS FROM DB ON STARTUP
+   Called once on init to hydrate the list
+   =========================================
+  */
+  loadNotifications(silent: boolean = false) {
+    if (!this.currentUser?.id) {
+      return;
+    }
+
+    this.notificationService.getNotifications(this.currentUser.id).subscribe({
+      next: (notifications: any) => {
+        this.notifications = notifications || [];
+        this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
+
+        if (!silent) {
+          console.log('Notifications loaded:', this.notifications.length);
+        }
+      },
+
+      error: (err) => {
+        console.error('Failed to load notifications:', err);
+      },
+    });
+  }
+
+  openNotificationsModal() {
+    this.showNotificationsModal = true;
+
+    this.notifications.forEach((notification: any) => {
+      if (!notification.read) {
+        this.notificationService.markAsRead(notification.id).subscribe({
+          next: () => {},
+          error: (err: any) => {
+            console.error('Failed to mark notification as read:', err);
+          },
+        });
+      }
+    });
+
+    /*
+     Optimistic UI update
+    */
+    this.notifications = this.notifications.map((n: any) => ({
+      ...n,
+      read: true,
+    }));
+
+    this.unreadNotificationCount = 0;
+    this.cdr.detectChanges();
+  }
+
+  closeNotificationsModal() {
+    this.showNotificationsModal = false;
+  }
+
   openGroupDetailsModal() {
     if (!this.selectedRoom) return;
 
@@ -930,11 +1100,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (room: any) => {
         this.groupDetails = room;
 
-        /*
-       CHECK IF CURRENT USER IS ADMIN
-      */
         const currentUserId = sessionStorage.getItem('userId');
-
         this.isCurrentUserRoomAdmin = String(room.createdBy) === String(currentUserId);
 
         this.groupForm = {
@@ -945,7 +1111,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         };
 
         this.showGroupDetailsModal = true;
-
         this.cdr.detectChanges();
       },
 
@@ -955,58 +1120,29 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  /*
-   CLOSE GROUP DETAILS
-  */
   closeGroupDetailsModal() {
     this.showGroupDetailsModal = false;
     this.selectedGroupFile = null;
   }
 
-  /*
-   GROUP IMAGE SELECT
-  */
   onGroupFileSelected(event: any) {
     const file = event.target.files[0];
-
     if (!file) return;
 
     this.selectedGroupFile = file;
 
-    /*
-     instant preview
-    */
     const reader = new FileReader();
-
     reader.onload = () => {
       this.groupForm.avatarUrl = reader.result as string;
-
       this.cdr.detectChanges();
     };
-
     reader.readAsDataURL(file);
   }
 
-  /*
-   SAVE GROUP DETAILS
-  */
-  /*
- SAVE GROUP DETAILS
-*/
   saveGroupDetails() {
-    /*
-   EXTRA FRONTEND SECURITY
-   prevent non-admin users
-  */
-    if (!this.isCurrentUserRoomAdmin) {
-      return;
-    }
-
+    if (!this.isCurrentUserRoomAdmin) return;
     if (!this.selectedRoom) return;
 
-    /*
-   upload image first if selected
-  */
     if (this.selectedGroupFile) {
       this.uploadingGroupAvatar = true;
 
@@ -1015,21 +1151,16 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.roomService.updateRoomAvatar(this.selectedRoom.id, res.filePath).subscribe({
             next: () => {
               this.groupForm.avatarUrl = res.filePath;
-
               this.updateRoomDetailsOnly();
             },
-
             error: (err: any) => {
               console.error('Failed to update avatar:', err);
-
               this.uploadingGroupAvatar = false;
             },
           });
         },
-
         error: (err: any) => {
           console.error('Group avatar upload failed:', err);
-
           this.uploadingGroupAvatar = false;
         },
       });
@@ -1040,9 +1171,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.updateRoomDetailsOnly();
   }
 
-  /*
- UPDATE ROOM INFO
-*/
   updateRoomDetailsOnly() {
     if (!this.selectedRoom) return;
 
@@ -1054,66 +1182,38 @@ export class ChatComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (updatedRoom: any) => {
-          /*
-         PRESERVE LIVE ROOM COUNTS
-         because backend update API
-         does not return transient fields
-        */
           this.selectedRoom = {
             ...this.selectedRoom,
-
-            /*
-           updated editable fields
-          */
             name: updatedRoom.name,
             description: updatedRoom.description,
             visibility: updatedRoom.visibility,
             avatarUrl: updatedRoom.avatarUrl,
-
-            /*
-           preserve live stats
-          */
             memberCount: this.selectedRoom.memberCount,
             onlineCount: this.selectedRoom.onlineCount,
           };
 
-          /*
-         sync room list
-        */
           this.rooms = this.rooms.map((room) => {
             if (String(room.roomId) === String(updatedRoom.roomId)) {
               return {
                 ...room,
-
-                /*
-               updated editable fields
-              */
                 name: updatedRoom.name,
                 description: updatedRoom.description,
                 visibility: updatedRoom.visibility,
                 avatarUrl: updatedRoom.avatarUrl,
-
-                /*
-               preserve live stats
-              */
                 memberCount: room.memberCount,
                 onlineCount: room.onlineCount,
               };
             }
-
             return room;
           });
 
           this.uploadingGroupAvatar = false;
-
           this.closeGroupDetailsModal();
-
           this.cdr.detectChanges();
         },
 
         error: (err: any) => {
           console.error('Failed to update room:', err);
-
           this.uploadingGroupAvatar = false;
         },
       });
@@ -1131,7 +1231,33 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   handleReaction(event: { messageId: string; emoji: string }) {
     this.messageService.reactToMessage(event.messageId, event.emoji).subscribe(() => {
-      this.loadMessages(this.selectedRoom?.id); // 🔥 REQUIRED
+      this.loadMessages(this.selectedRoom?.id);
+    });
+  }
+
+  resolveProfileImage(url?: string | null): string {
+    if (!url || url.trim() === '') {
+      return 'https://via.placeholder.com/80';
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image')) {
+      return url;
+    }
+
+    return 'https://via.placeholder.com/80';
+  }
+
+  markNotificationAsRead(notification: any) {
+    if (!notification || notification.read) return;
+
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        notification.read = true;
+        this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
+      },
+      error: (err) => {
+        console.error('Failed to mark notification as read:', err);
+      },
     });
   }
 }

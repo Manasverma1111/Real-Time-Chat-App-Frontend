@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RoomListItemComponent } from './room-list-item.component';
 import { Router } from '@angular/router';
 import { isSuperAdmin } from '../../../core/utils/auth.util';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -225,16 +226,22 @@ export class SidebarComponent {
   @Input() selectedRoom: any;
   @Input() loadingRooms: boolean = false;
   @Input() publicGroups: any[] = [];
+  @Input() notifications: any[] = [];
+  @Input() unreadCount: number = 0;
 
   @Output() selectRoom = new EventEmitter<any>();
   @Output() logout = new EventEmitter<void>();
   @Output() createRoom = new EventEmitter<void>();
   @Output() openProfile = new EventEmitter<void>();
   @Output() joinGroup = new EventEmitter<any>();
+  @Output() openNotifications = new EventEmitter<void>();
 
   search = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private notificationService: NotificationService,
+  ) {}
 
   get filteredRooms() {
     if (!this.search.trim()) return this.rooms;
@@ -264,5 +271,9 @@ export class SidebarComponent {
 
   handleJoinGroup(room: any) {
     this.joinGroup.emit(room);
+  }
+
+  handleOpenNotifications() {
+    this.openNotifications.emit();
   }
 }

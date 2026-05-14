@@ -7,7 +7,7 @@ import { Client } from '@stomp/stompjs';
 export class SocketService {
   private stompClient: Client | null = null;
 
-  // ✅ NEW: queue messages until connected
+  // ✅ queue messages until connected
   private pendingMessages: any[] = [];
 
   connect(token: string, onConnect?: () => void, onError?: (err: any) => void) {
@@ -29,7 +29,7 @@ export class SocketService {
       onConnect: () => {
         console.log('WebSocket connected');
 
-        // ✅ SEND QUEUED MESSAGES
+        // SEND QUEUED MESSAGES
         this.pendingMessages.forEach((msg) => this._publish(msg));
         this.pendingMessages = [];
 
@@ -88,6 +88,25 @@ export class SocketService {
     return this.stompClient.subscribe(`/topic/typing/${roomId}`, (message) => {
       callback(JSON.parse(message.body));
     });
+  }
+
+  /*
+   REAL-TIME NOTIFICATIONS
+   Subscribes to /topic/notifications/{userId}
+   Called once after socket connects + userId is known
+  */
+  subscribeNotifications(userId: string, callback: (notification: any) => void) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.warn('Socket not connected — cannot subscribe to notifications');
+      return null;
+    }
+
+    return this.stompClient.subscribe(
+      `/topic/notifications/${userId}`,
+      (message) => {
+        callback(JSON.parse(message.body));
+      }
+    );
   }
 
   sendTyping(payload: any) {

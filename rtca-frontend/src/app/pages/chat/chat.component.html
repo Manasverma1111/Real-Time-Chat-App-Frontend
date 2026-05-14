@@ -4,11 +4,14 @@
     [selectedRoom]="selectedRoom"
     [loadingRooms]="loadingRooms"
     [publicGroups]="publicGroups"
+    [notifications]="notifications"
+    [unreadCount]="unreadNotificationCount"
     (selectRoom)="selectRoom($event)"
     (logout)="handleLogout()"
     (createRoom)="handleCreateRoom()"
     (openProfile)="openProfileModal()"
     (joinGroup)="joinGroup($event)"
+    (openNotifications)="openNotificationsModal()"
   ></app-sidebar>
 
   <div class="chat-main">
@@ -286,6 +289,175 @@
   </div>
 </div>
 
+<!-- NOTIFICATION MODAL -->
+
+<div
+  *ngIf="showNotificationsModal"
+  class="modal-backdrop"
+  (click)="closeNotificationsModal()"
+  style="
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 24px;
+    align-items: center;
+    justify-content: center;
+  "
+>
+  <div
+    class="create-room-modal"
+    (click)="$event.stopPropagation()"
+    style="
+      width: 100%;
+      max-width: 460px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    "
+  >
+    <!-- HEADER -->
+
+    <div
+      style="
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border-subtle);
+      "
+    >
+      <div>
+        <div class="modal-title">Notifications</div>
+
+        <div class="modal-subtitle">Realtime activity updates</div>
+      </div>
+
+      <!-- CLOSE BUTTON -->
+
+      <button
+        (click)="closeNotificationsModal()"
+        style="
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-elevated);
+          color: var(--text-primary);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: 0.2s ease;
+        "
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- BODY -->
+
+    <div style="overflow-y: auto; margin-top: 16px; padding-right: 4px; flex: 1">
+      <!-- EMPTY STATE -->
+
+      <div
+        *ngIf="!notifications.length"
+        style="padding: 40px 20px; text-align: center; color: var(--text-secondary)"
+      >
+        No notifications yet
+      </div>
+
+      <!-- NOTIFICATION ITEMS -->
+
+      <div
+        *ngFor="let notification of notifications"
+        style="
+          padding: 14px;
+          border-radius: 14px;
+          background: var(--bg-elevated);
+          margin-bottom: 12px;
+          border: 1px solid var(--border-subtle);
+          transition: 0.2s ease;
+        "
+        [style.border]="
+          !notification.read ? '1px solid rgba(212,175,55,0.45)' : '1px solid var(--border-subtle)'
+        "
+      >
+        <div
+          style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px"
+        >
+          <div style="flex: 1; min-width: 0">
+            <!-- MESSAGE -->
+
+            <div
+              style="
+                font-size: 14px;
+                color: var(--text-primary);
+                margin-bottom: 8px;
+                line-height: 1.5;
+                word-break: break-word;
+              "
+            >
+              {{ notification.message }}
+            </div>
+
+            <!-- TIME -->
+
+            <div style="font-size: 11px; color: var(--text-secondary)">
+              {{ notification.createdAt | date: 'medium' }}
+            </div>
+          </div>
+
+          <!-- UNREAD DOT -->
+
+          <div
+            *ngIf="!notification.read"
+            style="
+              width: 10px;
+              height: 10px;
+              border-radius: 999px;
+              background: #4ade80;
+              flex-shrink: 0;
+              margin-top: 5px;
+            "
+          ></div>
+        </div>
+
+        <!-- MARK READ BUTTON -->
+
+        <button
+          *ngIf="!notification.read"
+          (click)="markNotificationAsRead(notification)"
+          style="
+            margin-top: 12px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent);
+            color: var(--text-inverse);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+          "
+        >
+          Mark as read
+        </button>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+
+    <div
+      class="modal-actions"
+      style="
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border-subtle);
+        flex-shrink: 0;
+      "
+    >
+      <button class="btn-cancel" (click)="closeNotificationsModal()">Close</button>
+    </div>
+  </div>
+</div>
 <!-- PROFILE MODAL -->
 
 <div *ngIf="showProfileModal" class="modal-backdrop">
@@ -296,7 +468,7 @@
     <!-- PROFILE IMAGE -->
     <div class="form-group" style="text-align: center">
       <img
-        [src]="profileForm.avatarUrl || 'https://via.placeholder.com/80'"
+        [src]="resolveProfileImage(profileForm.avatarUrl)"
         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover"
       />
 
