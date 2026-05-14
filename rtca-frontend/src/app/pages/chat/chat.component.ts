@@ -1042,12 +1042,24 @@ export class ChatComponent implements OnInit, OnDestroy {
    Called once on init to hydrate the list
    =========================================
   */
+  /*
+ =========================================
+ LOAD NOTIFICATIONS FROM DB
+ =========================================
+*/
   loadNotifications(silent: boolean = false) {
-    if (!this.currentUser?.id) {
+    /*
+   CRITICAL FIX:
+   Backend may return userId or id depending on the endpoint.
+   Try both fields with fallback.
+  */
+    const userId = this.currentUser?.userId || this.currentUser?.id;
+
+    if (!userId) {
       return;
     }
 
-    this.notificationService.getNotifications(this.currentUser.id).subscribe({
+    this.notificationService.getNotifications(userId).subscribe({
       next: (notifications: any) => {
         this.notifications = notifications || [];
         this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
@@ -1063,30 +1075,61 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  /*
+ =========================================
+ OPEN NOTIFICATIONS MODAL
+ Always re-fetch from DB first so
+ notification.id values are real UUIDs
+ (WebSocket payload ids are temporary)
+ =========================================
+*/
   openNotificationsModal() {
     this.showNotificationsModal = true;
 
-    this.notifications.forEach((notification: any) => {
-      if (!notification.read) {
-        this.notificationService.markAsRead(notification.id).subscribe({
-          next: () => {},
-          error: (err: any) => {
-            console.error('Failed to mark notification as read:', err);
-          },
-        });
-      }
-    });
+    const userId = this.currentUser?.userId || this.currentUser?.id;
+
+    if (!userId) {
+      return;
+    }
 
     /*
-     Optimistic UI update
-    */
-    this.notifications = this.notifications.map((n: any) => ({
-      ...n,
-      read: true,
-    }));
+   Re-fetch from DB to get real persisted UUIDs
+   before calling markAsRead
+  */
+    this.notificationService.getNotifications(userId).subscribe({
+      next: (notifications: any) => {
+        this.notifications = notifications || [];
 
-    this.unreadNotificationCount = 0;
-    this.cdr.detectChanges();
+        /*
+       Mark all unread as read using real DB UUIDs
+      */
+        this.notifications.forEach((notification: any) => {
+          if (!notification.read && notification.id) {
+            this.notificationService.markAsRead(notification.id).subscribe({
+              next: () => {},
+              error: (err: any) => {
+                console.error('Failed to mark notification as read:', err);
+              },
+            });
+          }
+        });
+
+        /*
+       Optimistic UI update
+      */
+        this.notifications = this.notifications.map((n: any) => ({
+          ...n,
+          read: true,
+        }));
+
+        this.unreadNotificationCount = 0;
+        this.cdr.detectChanges();
+      },
+
+      error: (err) => {
+        console.error('Failed to load notifications before marking read:', err);
+      },
+    });
   }
 
   closeNotificationsModal() {

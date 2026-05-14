@@ -10,7 +10,9 @@
     </div>
   </div>
 
-  <div *ngIf="room?.unread" class="unread-badge">{{ room.unread }}</div>
+  <div *ngIf="unreadCount > 0" class="unread-badge">
+    {{ unreadCount }}
+  </div>
 </button>
 
 <!-- <button

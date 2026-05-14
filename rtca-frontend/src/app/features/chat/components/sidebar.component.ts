@@ -248,6 +248,18 @@ export class SidebarComponent {
     return this.rooms.filter((r) => r.name.toLowerCase().includes(this.search.toLowerCase()));
   }
 
+  /*
+   COUNT UNREAD NOTIFICATIONS FOR A SPECIFIC ROOM
+   Filters notifications by roomId and unread status.
+   Called from template for each room in the list.
+  */
+  getUnreadCountForRoom(roomId: string): number {
+    if (!this.notifications?.length) return 0;
+
+    return this.notifications.filter((n: any) => !n.read && String(n.roomId) === String(roomId))
+      .length;
+  }
+
   handleSelect(room: any) {
     this.selectRoom.emit(room);
   }

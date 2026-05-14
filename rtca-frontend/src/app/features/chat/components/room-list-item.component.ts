@@ -116,6 +116,12 @@ export class RoomListItemComponent {
   @Input() room: any;
   @Input() isActive: boolean = false;
 
+  /*
+   UNREAD COUNT per room
+   passed from parent (ChatComponent → SidebarComponent)
+  */
+  @Input() unreadCount: number = 0;
+
   @Output() select = new EventEmitter<any>();
 
   get initials(): string {
