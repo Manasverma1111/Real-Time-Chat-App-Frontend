@@ -553,7 +553,31 @@ export class ChatComponent implements OnInit, OnDestroy {
         });
 
         this.messageService.markMessagesAsSeen(roomId).subscribe({
-          next: () => {},
+          next: () => {
+            /*
+     WHATSAPP-LIKE BEHAVIOR
+     Opening a room instantly clears
+     unread notifications for that room.
+    */
+            this.notifications = this.notifications.map((notification: any) => {
+              if (String(notification.roomId) === String(roomId)) {
+                return {
+                  ...notification,
+                  read: true,
+                };
+              }
+
+              return notification;
+            });
+
+            /*
+     Recalculate unread badge count
+    */
+            this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
+
+            this.cdr.detectChanges();
+          },
+
           error: (err: any) => {
             console.error('Failed to mark messages as seen:', err);
           },
@@ -639,6 +663,43 @@ export class ChatComponent implements OnInit, OnDestroy {
           isFirstInGroup: !isSameSender,
         },
       ];
+
+      /*
+ WHATSAPP-LIKE BEHAVIOR
+ If user is already inside the room,
+ immediately mark messages as seen
+ and clear notifications for this room.
+*/
+      if (String(msg.roomId) === String(this.selectedRoom?.id) && !isOwn) {
+        this.messageService.markMessagesAsSeen(roomId).subscribe({
+          next: () => {
+            /*
+       Remove notifications for current room
+      */
+            this.notifications = this.notifications.map((notification: any) => {
+              if (String(notification.roomId) === String(roomId)) {
+                return {
+                  ...notification,
+                  read: true,
+                };
+              }
+
+              return notification;
+            });
+
+            /*
+       Recalculate unread count
+      */
+            this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
+
+            this.cdr.detectChanges();
+          },
+
+          error: (err: any) => {
+            console.error('Failed to mark messages as seen:', err);
+          },
+        });
+      }
 
       this.cdr.detectChanges();
     });
