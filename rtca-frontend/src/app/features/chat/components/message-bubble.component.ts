@@ -116,6 +116,11 @@ export class MessageBubbleComponent {
   @Output() deleteForEveryone = new EventEmitter<string>();
   @Output() react = new EventEmitter<{ messageId: string; emoji: string }>();
 
+  /*
+   FORWARD EVENT
+   Emits the full message so parent can show room picker
+  */
+  @Output() forward = new EventEmitter<any>();
   showMenu = false;
   showReactions = false;
 
@@ -130,6 +135,11 @@ export class MessageBubbleComponent {
 
   handleDeleteForEveryone() {
     this.deleteForEveryone.emit(this.message?.id);
+    this.showMenu = false;
+  }
+
+  handleForward() {
+    this.forward.emit(this.message);
     this.showMenu = false;
   }
 

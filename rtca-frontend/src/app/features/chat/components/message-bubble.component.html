@@ -13,7 +13,7 @@
     style="width: 28px; flex-shrink: 0"
   ></div>
 
-  <!-- OWN MESSAGE ACTIONS (left of bubble, only for own messages) -->
+  <!-- OWN MESSAGE ACTIONS -->
   <div
     *ngIf="message?.isOwn"
     class="bubble-actions"
@@ -35,7 +35,7 @@
       😊
     </button>
 
-    <!-- EMOJI PICKER (opens upward, anchored right) -->
+    <!-- EMOJI PICKER -->
     <div
       *ngIf="showReactions"
       style="
@@ -58,7 +58,7 @@
       <span (click)="handleReaction('😮')" style="cursor: pointer; font-size: 16px">😮</span>
     </div>
 
-    <!-- ⋮ 3-dot (own only) -->
+    <!-- ⋮ 3-dot -->
     <button
       (click)="toggleMenu()"
       style="
@@ -90,6 +90,13 @@
         white-space: nowrap;
       "
     >
+      <!-- FORWARD -->
+      <div
+        (click)="handleForward()"
+        style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px"
+      >
+        ↗ Forward
+      </div>
       <div (click)="handleDeleteForMe()" style="padding: 8px 12px; cursor: pointer">
         Delete for me
       </div>
@@ -99,18 +106,14 @@
     </div>
   </div>
 
-  <!-- ✅ ORIGINAL BUBBLE (UNCHANGED) -->
+  <!-- BUBBLE -->
   <div class="bubble" [class.own]="message?.isOwn" [class.other]="!message?.isOwn">
     <div *ngIf="!message?.isOwn" class="sender-name">
       {{ message?.senderName || 'User' }}
     </div>
-    <!-- 
-    <div class="bubble-text">
-      {{ message?.content }}
-    </div> -->
 
     <div class="bubble-text">
-      <!-- IMAGE MESSAGE -->
+      <!-- IMAGE -->
       <img
         *ngIf="isImage(message?.content)"
         [src]="message?.content"
@@ -118,20 +121,20 @@
         alt="uploaded-image"
       />
 
-      <!-- VIDEO MESSAGE -->
+      <!-- VIDEO -->
       <video *ngIf="isVideo(message?.content)" class="media-video" controls>
         <source [src]="message?.content" />
       </video>
 
-      <!-- FILE MESSAGE -->
+      <!-- FILE -->
       <div
         *ngIf="isFile(message?.content) && !isImage(message?.content) && !isVideo(message?.content)"
         class="media-file"
       >
-        <a [href]="message?.content" target="_blank"> 📎 {{ getFileName(message?.content) }} </a>
+        <a [href]="message?.content" target="_blank">📎 {{ getFileName(message?.content) }}</a>
       </div>
 
-      <!-- NORMAL TEXT -->
+      <!-- TEXT -->
       <span
         *ngIf="
           !isImage(message?.content) && !isVideo(message?.content) && !isFile(message?.content)
@@ -140,6 +143,7 @@
         {{ message?.content }}
       </span>
     </div>
+
     <div class="bubble-time">
       {{ message?.createdAt | date: 'shortTime' }}
       <span *ngIf="message?.isOwn">
@@ -148,11 +152,11 @@
     </div>
   </div>
 
-  <!-- OTHER MESSAGE ACTIONS (right of bubble, emoji only, no 3-dot) -->
+  <!-- OTHER MESSAGE ACTIONS -->
   <div
     *ngIf="!message?.isOwn"
     class="bubble-actions"
-    style="display: flex; align-items: center; position: relative"
+    style="display: flex; align-items: center; gap: 2px; position: relative"
   >
     <!-- 😊 -->
     <button
@@ -170,7 +174,7 @@
       😊
     </button>
 
-    <!-- EMOJI PICKER (opens upward, anchored left) -->
+    <!-- EMOJI PICKER -->
     <div
       *ngIf="showReactions"
       style="
@@ -192,10 +196,50 @@
       <span (click)="handleReaction('😂')" style="cursor: pointer; font-size: 16px">😂</span>
       <span (click)="handleReaction('😮')" style="cursor: pointer; font-size: 16px">😮</span>
     </div>
+
+    <!-- ⋮ 3-dot for OTHER messages too (forward only) -->
+    <button
+      (click)="toggleMenu()"
+      style="
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-size: 16px;
+        padding: 4px;
+        line-height: 1;
+      "
+    >
+      ⋮
+    </button>
+
+    <!-- CONTEXT MENU (forward only for other messages) -->
+    <div
+      *ngIf="showMenu"
+      style="
+        position: absolute;
+        bottom: 32px;
+        left: 0;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        z-index: 10;
+        min-width: 160px;
+        white-space: nowrap;
+      "
+    >
+      <div
+        (click)="handleForward()"
+        style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px"
+      >
+        ↗ Forward
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ✅ REACTIONS (OUTSIDE ROW — UNCHANGED) -->
+<!-- REACTIONS -->
 <ng-container *ngIf="message?.reactions as reactions">
   <ng-container *ngIf="reactions | keyvalue as reactionsList">
     <div

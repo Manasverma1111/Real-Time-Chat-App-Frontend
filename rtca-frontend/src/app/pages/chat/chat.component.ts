@@ -412,6 +412,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   unreadNotificationCount = 0;
 
   /*
+ FORWARD MESSAGE
+*/
+  showForwardModal = false;
+  forwardingMessage: any = null;
+  selectedForwardRooms: string[] = [];
+  forwardingInProgress = false;
+
+  /*
+
    =========================================
    REAL-TIME NOTIFICATION SUBSCRIPTION
    Replaces polling interval
@@ -1273,8 +1282,40 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   handleReaction(event: { messageId: string; emoji: string }) {
-    this.messageService.reactToMessage(event.messageId, event.emoji).subscribe(() => {
-      this.loadMessages(this.selectedRoom?.id);
+    /*
+   Preserve current scroll position
+  */
+    const messagesArea = document.querySelector('.messages-area');
+
+    const currentScrollTop = messagesArea ? messagesArea.scrollTop : 0;
+
+    this.messageService.reactToMessage(event.messageId, event.emoji).subscribe({
+      next: () => {
+        /*
+       Reload messages from backend
+       so reaction rules stay correct
+      */
+        this.loadMessages(this.selectedRoom?.id);
+
+        /*
+       Restore scroll position after render
+      */
+        setTimeout(() => {
+          if (messagesArea) {
+            messagesArea.scrollTop = currentScrollTop;
+          }
+        }, 0);
+
+        setTimeout(() => {
+          if (messagesArea) {
+            messagesArea.scrollTop = currentScrollTop;
+          }
+        }, 50);
+      },
+
+      error: (err) => {
+        console.error('Reaction failed:', err);
+      },
     });
   }
 
@@ -1302,5 +1343,69 @@ export class ChatComponent implements OnInit, OnDestroy {
         console.error('Failed to mark notification as read:', err);
       },
     });
+  }
+
+  /*
+ OPEN FORWARD MODAL
+*/
+  handleForwardMessage(message: any) {
+    this.forwardingMessage = message;
+    this.selectedForwardRooms = [];
+    this.showForwardModal = true;
+  }
+
+  /*
+ TOGGLE ROOM SELECTION FOR FORWARD
+*/
+  toggleForwardRoom(roomId: string) {
+    if (this.selectedForwardRooms.includes(roomId)) {
+      this.selectedForwardRooms = this.selectedForwardRooms.filter((id) => id !== roomId);
+    } else {
+      this.selectedForwardRooms = [...this.selectedForwardRooms, roomId];
+    }
+  }
+
+  /*
+ SUBMIT FORWARD
+ Sends the message content to each selected room via WebSocket
+*/
+  submitForward() {
+    if (!this.forwardingMessage || !this.selectedForwardRooms.length) return;
+
+    this.forwardingInProgress = true;
+
+    for (const roomId of this.selectedForwardRooms) {
+      this.socketService.send({
+        roomId,
+        senderId: sessionStorage.getItem('userId'),
+        senderName: sessionStorage.getItem('username') || 'User',
+        content: this.forwardingMessage.content,
+      });
+    }
+
+    this.forwardingInProgress = false;
+    this.showForwardModal = false;
+    this.forwardingMessage = null;
+    this.selectedForwardRooms = [];
+  }
+
+  /*
+ CLOSE FORWARD MODAL
+*/
+  closeForwardModal() {
+    this.showForwardModal = false;
+    this.forwardingMessage = null;
+    this.selectedForwardRooms = [];
+  }
+
+  getRoomInitials(name: string): string {
+    if (!name) return 'RM';
+    return (
+      name
+        .split(' ')
+        .slice(0, 2)
+        .map((p) => p[0]?.toUpperCase() || '')
+        .join('') || 'RM'
+    );
   }
 }

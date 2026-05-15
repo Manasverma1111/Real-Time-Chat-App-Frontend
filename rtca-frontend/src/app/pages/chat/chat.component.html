@@ -30,6 +30,7 @@
       (deleteMessage)="deleteMessageForMe($event)"
       (deleteForEveryone)="deleteMessageForEveryone($event)"
       (reactMessage)="handleReaction($event)"
+      (forwardMessage)="handleForwardMessage($event)"
     ></app-chat-window>
   </div>
 
@@ -458,6 +459,156 @@
     </div>
   </div>
 </div>
+
+<!-- FORWARD MESSAGE MODAL -->
+<div
+  *ngIf="showForwardModal"
+  class="modal-backdrop"
+  (click)="closeForwardModal()"
+  style="z-index: 9999"
+>
+  <div
+    class="create-room-modal"
+    (click)="$event.stopPropagation()"
+    style="
+      max-width: 420px;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    "
+  >
+    <div class="modal-title">Forward Message</div>
+    <div class="modal-subtitle">Select rooms to forward to</div>
+
+    <!-- MESSAGE PREVIEW -->
+    <div
+      style="
+        margin-bottom: 16px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-subtle);
+        font-size: 13px;
+        color: var(--text-secondary);
+        word-break: break-word;
+        max-height: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      "
+    >
+      <span style="font-weight: 600; color: var(--text-primary)">Message: </span>
+      {{ forwardingMessage?.content }}
+    </div>
+
+    <!-- ROOM LIST -->
+    <div style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px">
+      <div
+        *ngFor="let room of rooms"
+        (click)="toggleForwardRoom(room.id)"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          border-radius: 10px;
+          cursor: pointer;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-elevated);
+          transition:
+            border-color 0.15s ease,
+            background 0.15s ease;
+        "
+        [style.border-color]="
+          selectedForwardRooms.includes(room.id) ? 'var(--accent)' : 'var(--border-subtle)'
+        "
+        [style.background]="
+          selectedForwardRooms.includes(room.id) ? 'var(--accent-dim)' : 'var(--bg-elevated)'
+        "
+      >
+        <!-- INITIALS -->
+        <div
+          style="
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+          "
+        >
+          {{ getRoomInitials(room.name) }}
+        </div>
+
+        <!-- ROOM NAME -->
+        <div style="flex: 1; min-width: 0">
+          <div
+            style="
+              font-size: 13px;
+              font-weight: 500;
+              color: var(--text-primary);
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            "
+          >
+            {{ room.name }}
+          </div>
+        </div>
+
+        <!-- CHECKMARK -->
+        <div
+          style="
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border-default);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 11px;
+            transition: all 0.15s ease;
+          "
+          [style.background]="
+            selectedForwardRooms.includes(room.id) ? 'var(--accent)' : 'transparent'
+          "
+          [style.border-color]="
+            selectedForwardRooms.includes(room.id) ? 'var(--accent)' : 'var(--border-default)'
+          "
+          [style.color]="
+            selectedForwardRooms.includes(room.id) ? 'var(--text-inverse)' : 'transparent'
+          "
+        >
+          ✓
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div
+      class="modal-actions"
+      style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle)"
+    >
+      <button class="btn-cancel" (click)="closeForwardModal()">Cancel</button>
+      <button
+        class="btn-create"
+        [disabled]="!selectedForwardRooms.length || forwardingInProgress"
+        (click)="submitForward()"
+      >
+        {{ forwardingInProgress ? 'Sending...' : 'Forward' }}
+        <span *ngIf="selectedForwardRooms.length > 0">({{ selectedForwardRooms.length }})</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- PROFILE MODAL -->
 
 <div *ngIf="showProfileModal" class="modal-backdrop">

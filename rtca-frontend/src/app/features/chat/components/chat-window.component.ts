@@ -5,7 +5,10 @@ import {
   EventEmitter,
   ViewChild,
   ElementRef,
+  AfterViewInit,
   AfterViewChecked,
+  OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -187,7 +190,7 @@ import { MessageBubbleComponent } from './message-bubble.component';
     `,
   ],
 })
-export class ChatWindowComponent implements AfterViewChecked {
+export class ChatWindowComponent implements AfterViewInit, OnChanges {
   @Input() room: any;
   @Input() messages: any[] = [];
   @Input() currentUser: any;
@@ -208,23 +211,122 @@ export class ChatWindowComponent implements AfterViewChecked {
   @Output() deleteRoom = new EventEmitter<void>();
   @Output() deleteForEveryone = new EventEmitter<string>();
 
-  @ViewChild('scrollEnd') scrollEnd!: ElementRef;
+  /*
+   FORWARD: emits the full message object
+   to ChatComponent which owns the rooms list
+  */
+  @Output() forwardMessage = new EventEmitter<any>();
+
+  // @ViewChild('scrollEnd') scrollEnd!: ElementRef;
 
   private typingTimeout: any;
+
+  // private previousMessageCount = 0;
 
   text = '';
   sending = false;
 
-  ngAfterViewChecked() {
-    this.scrollToBottom();
+  // ngAfterViewChecked() {
+  //   if (this.messages.length > this.previousMessageCount) {
+  //     this.previousMessageCount = this.messages.length;
+
+  //     setTimeout(() => {
+  //       this.scrollToBottom();
+  //     });
+  //   }
+  // }
+
+  // scrollToBottom() {
+  //   try {
+  //     this.scrollEnd?.nativeElement?.scrollIntoView({
+  //       behavior: 'smooth',
+  //     });
+  //   } catch {}
+  // }
+
+  @ViewChild('messagesContainer')
+  messagesContainer!: ElementRef;
+
+  ngAfterViewInit(): void {
+    this.forceScrollToBottom();
   }
 
-  scrollToBottom() {
+  private previousMessageCount = 0;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    /*
+   ROOM OPEN / REFRESH
+  */
+    if (changes['room'] && this.room) {
+      this.previousMessageCount = this.messages.length;
+
+      setTimeout(() => {
+        this.forceScrollToBottom();
+      }, 0);
+
+      setTimeout(() => {
+        this.forceScrollToBottom();
+      }, 100);
+
+      setTimeout(() => {
+        this.forceScrollToBottom();
+      }, 300);
+    }
+
+    /*
+   NEW MESSAGE HANDLING
+  */
+    if (changes['messages']) {
+      const currentCount = this.messages.length;
+
+      /*
+     ONLY actual new messages
+    */
+      if (currentCount > this.previousMessageCount) {
+        const shouldScroll = this.isNearBottom();
+
+        this.previousMessageCount = currentCount;
+
+        /*
+       WhatsApp behavior:
+       scroll only if already near bottom
+      */
+        if (shouldScroll) {
+          setTimeout(() => {
+            this.forceScrollToBottom();
+          }, 50);
+        }
+      }
+    }
+  }
+
+  forceScrollToBottom(): void {
     try {
-      this.scrollEnd?.nativeElement?.scrollIntoView({
-        behavior: 'smooth',
-      });
-    } catch {}
+      const container = this.messagesContainer?.nativeElement;
+
+      if (!container) return;
+
+      container.scrollTop = container.scrollHeight;
+    } catch (err) {
+      console.error('Scroll failed:', err);
+    }
+  }
+
+  isNearBottom(): boolean {
+    try {
+      const container = this.messagesContainer?.nativeElement;
+
+      if (!container) return true;
+
+      const threshold = 120;
+
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+
+      return distanceFromBottom < threshold;
+    } catch {
+      return true;
+    }
   }
 
   send() {
@@ -278,5 +380,12 @@ export class ChatWindowComponent implements AfterViewChecked {
 
   handleReaction(event: { messageId: string; emoji: string }) {
     this.reactMessage.emit(event);
+  }
+
+  /*
+   Bubble emits the full message → pass up to ChatComponent
+  */
+  handleForwardMessage(message: any) {
+    this.forwardMessage.emit(message);
   }
 }

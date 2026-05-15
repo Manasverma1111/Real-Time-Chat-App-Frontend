@@ -9,7 +9,7 @@
   ></app-chat-header>
 
   <!-- Messages -->
-  <div class="messages-area">
+  <div class="messages-area" #messagesContainer>
     <ng-container *ngIf="messages.length > 0; else emptyState">
       <app-message-bubble
         *ngFor="let message of messages"
@@ -17,8 +17,9 @@
         (deleteForMe)="handleDeleteMessage($event)"
         (deleteForEveryone)="handleDeleteForEveryone($event)"
         (react)="handleReaction($event)"
+        (forward)="handleForwardMessage($event)"
       ></app-message-bubble>
-      <div #scrollEnd></div>
+      <!-- <div #scrollEnd></div> -->
     </ng-container>
 
     <ng-template #emptyState>
