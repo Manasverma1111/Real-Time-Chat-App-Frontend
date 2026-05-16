@@ -11,8 +11,8 @@ export class MessageService {
     return this.api.post('/messages', payload);
   }
 
-  getMessagesByRoom(roomId: string) {
-    return this.api.get(`/messages?roomId=${roomId}`);
+  getMessagesByRoom(roomId: string, page: number = 0, size: number = 20) {
+    return this.api.get(`/messages?roomId=${roomId}&page=${page}&size=${size}`);
   }
 
   /*

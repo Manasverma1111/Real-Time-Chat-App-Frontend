@@ -9,7 +9,7 @@
   ></app-chat-header>
 
   <!-- Messages -->
-  <div class="messages-area" #messagesContainer>
+  <div class="messages-area" #messagesContainer (scroll)="onScroll()">
     <ng-container *ngIf="messages.length > 0; else emptyState">
       <app-message-bubble
         *ngFor="let message of messages"

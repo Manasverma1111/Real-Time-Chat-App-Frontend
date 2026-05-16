@@ -419,6 +419,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   selectedForwardRooms: string[] = [];
   forwardingInProgress = false;
 
+  // PAGINATION FOR MESSAGES
+  currentPage = 0;
+  pageSize = 20;
+  loadingOlderMessages = false;
+  hasMoreMessages = true;
+
   /*
 
    =========================================
@@ -477,14 +483,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.roomService.getUserRooms().subscribe({
       next: (data: any) => {
         this.rooms = (data || []).map((room: any) => ({
-          id: room.roomId,
+          id: room.roomId || room.id,
           roomId: room.roomId,
           name: room.name,
           type: room.type,
           avatarUrl: room.avatarUrl || '',
           memberCount: room.memberCount || 0,
           onlineCount: room.onlineCount || 0,
-          lastMessage: 'No messages yet',
+          lastMessage: 'Loading...',
         }));
 
         const currentUserId = sessionStorage.getItem('userId');
@@ -510,6 +516,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.selectRoom(this.rooms[0]);
         }
 
+        this.hydrateSidebarLastMessages();
+
         this.loadingRooms = false;
         this.cdr.detectChanges();
       },
@@ -532,18 +540,30 @@ export class ChatComponent implements OnInit, OnDestroy {
       localStorage.setItem(`selectedRoomId_${currentUserId}`, room.roomId || room.id);
     }
 
-    this.loadMessages(room.id);
+    this.loadMessages(room.id, true);
     this.subscribeToRoom(room.id);
     this.subscribeTyping(room.id);
     this.cdr.detectChanges();
   }
 
-  loadMessages(roomId: string) {
-    this.messageService.getMessagesByRoom(roomId).subscribe({
+  loadMessages(roomId: string, reset: boolean = true) {
+    if (this.loadingOlderMessages) return;
+
+    if (reset) {
+      this.currentPage = 0;
+      this.hasMoreMessages = true;
+      this.messages = [];
+    }
+
+    this.loadingOlderMessages = true;
+
+    this.messageService.getMessagesByRoom(roomId, this.currentPage, this.pageSize).subscribe({
       next: (data: any) => {
-        this.messages = (data || []).map((msg: any, index: number, arr: any[]) => {
+        const formattedMessages = (data || []).map((msg: any, index: number, arr: any[]) => {
           const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
+
           const prev = arr[index - 1];
+
           const isSameSender = prev && String(prev.senderId) === String(msg.senderId);
 
           return {
@@ -554,13 +574,51 @@ export class ChatComponent implements OnInit, OnDestroy {
           };
         });
 
+        /*
+         RESET = fresh room load
+        */
+        if (reset) {
+          this.messages = formattedMessages;
+
+          /*
+        update sidebar last message
+        */
+          if (formattedMessages.length > 0 && this.selectedRoom) {
+            const latestMessage = formattedMessages[formattedMessages.length - 1];
+
+            this.updateRoomLastMessage(roomId, this.getSidebarMessagePreview(latestMessage));
+          }
+
+          setTimeout(() => {
+            const container = document.querySelector('.messages-area') as HTMLElement;
+
+            if (container) {
+              container.scrollTop = container.scrollHeight;
+            }
+          }, 50);
+        } else {
+          /*
+           prepend older messages
+          */
+          this.messages = [...formattedMessages, ...this.messages];
+        }
+
+        /*
+         pagination end detection
+        */
+        if (formattedMessages.length < this.pageSize) {
+          this.hasMoreMessages = false;
+        }
+
+        this.loadingOlderMessages = false;
+
+        /*
+         next page
+        */
+        this.currentPage++;
+
         this.messageService.markMessagesAsSeen(roomId).subscribe({
           next: () => {
-            /*
-     WHATSAPP-LIKE BEHAVIOR
-     Opening a room instantly clears
-     unread notifications for that room.
-    */
             this.notifications = this.notifications.map((notification: any) => {
               if (String(notification.roomId) === String(roomId)) {
                 return {
@@ -572,16 +630,9 @@ export class ChatComponent implements OnInit, OnDestroy {
               return notification;
             });
 
-            /*
-     Recalculate unread badge count
-    */
             this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
 
             this.cdr.detectChanges();
-          },
-
-          error: (err: any) => {
-            console.error('Failed to mark messages as seen:', err);
           },
         });
 
@@ -590,8 +641,17 @@ export class ChatComponent implements OnInit, OnDestroy {
 
       error: (err: any) => {
         console.error('Failed to load messages:', err);
+        this.loadingOlderMessages = false;
       },
     });
+  }
+
+  loadOlderMessages() {
+    if (!this.selectedRoom) return;
+
+    if (!this.hasMoreMessages) return;
+
+    this.loadMessages(this.selectedRoom.id, false);
   }
 
   connectSocket() {
@@ -666,6 +726,11 @@ export class ChatComponent implements OnInit, OnDestroy {
           isFirstInGroup: !isSameSender,
         },
       ];
+
+      /*
+      update sidebar instantly
+      */
+      this.updateRoomLastMessage(roomId, this.getSidebarMessagePreview(msg));
 
       /*
  WHATSAPP-LIKE BEHAVIOR
@@ -1474,5 +1539,120 @@ export class ChatComponent implements OnInit, OnDestroy {
         .map((p) => p[0]?.toUpperCase() || '')
         .join('') || 'RM'
     );
+  }
+
+  private updateRoomLastMessage(roomId: string, message: string) {
+    this.rooms = this.rooms.map((room: any) => {
+      const currentRoomId = room.roomId || room.id;
+
+      if (String(currentRoomId) === String(roomId)) {
+        return {
+          ...room,
+          lastMessage: message,
+        };
+      }
+
+      return room;
+    });
+
+    /*
+   move active room to top
+   WhatsApp / Discord style
+  */
+    this.rooms.sort((a: any, b: any) => {
+      const aId = a.roomId || a.id;
+      const bId = b.roomId || b.id;
+
+      if (String(aId) === String(roomId)) return -1;
+      if (String(bId) === String(roomId)) return 1;
+
+      return 0;
+    });
+  }
+
+  private getSidebarMessagePreview(message: any): string {
+    if (!message?.content) {
+      return 'No messages yet';
+    }
+
+    const content = String(message.content).toLowerCase();
+
+    /*
+   image
+  */
+    if (
+      content.includes('.jpg') ||
+      content.includes('.jpeg') ||
+      content.includes('.png') ||
+      content.includes('.gif') ||
+      content.includes('.webp')
+    ) {
+      return '📷 Photo';
+    }
+
+    /*
+   video
+  */
+    if (
+      content.includes('.mp4') ||
+      content.includes('.webm') ||
+      content.includes('.mov') ||
+      content.includes('.ogg')
+    ) {
+      return '🎥 Video';
+    }
+
+    /*
+   file
+  */
+    if (content.startsWith('http')) {
+      return '📎 File';
+    }
+
+    return `${message.senderName || 'User'}: ${message.content}`;
+  }
+
+  // On initial load, fetch the latest message for each room to display in the sidebar
+  private hydrateSidebarLastMessages() {
+    this.rooms.forEach((room: any) => {
+      const roomId = room.roomId || room.id;
+
+      if (!roomId) {
+        room.lastMessage = 'No messages yet';
+        return;
+      }
+
+      this.messageService.getMessagesByRoom(roomId, 0, 1).subscribe({
+        next: (messages: any) => {
+          if (messages && messages.length > 0) {
+            /*
+           size=1 pagination returns latest message
+          */
+            const latestMessage = messages[0];
+
+            room.lastMessage = this.getSidebarMessagePreview(latestMessage);
+          } else {
+            room.lastMessage = 'No messages yet';
+          }
+
+          /*
+         immutable refresh
+        */
+          this.rooms = [...this.rooms];
+
+          this.cdr.detectChanges();
+        },
+
+        error: (err) => {
+          console.error('Failed loading sidebar message for room:', roomId, err);
+
+          room.lastMessage = 'No messages yet';
+
+          this.rooms = [...this.rooms];
+
+          this.cdr.detectChanges();
+        },
+      });
+    });
   }
 }

@@ -9,6 +9,7 @@ import {
   AfterViewChecked,
   OnChanges,
   SimpleChanges,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -202,6 +203,7 @@ export class ChatWindowComponent implements AfterViewInit, OnChanges {
   @Output() deleteMessage = new EventEmitter<string>();
   @Output() reactMessage = new EventEmitter<{ messageId: string; emoji: string }>();
   @Output() openGroupDetails = new EventEmitter<void>();
+  @Output() loadMoreMessages = new EventEmitter<void>();
 
   /*
    NEW EVENTS FOR ROOM MEMBER MANAGEMENT
@@ -297,6 +299,27 @@ export class ChatWindowComponent implements AfterViewInit, OnChanges {
           }, 50);
         }
       }
+    }
+  }
+
+  onScroll() {
+    const container = this.messagesContainer?.nativeElement;
+
+    if (!container) return;
+
+    /*
+    load older messages when near top
+    */
+    if (container.scrollTop < 120) {
+      const previousHeight = container.scrollHeight;
+
+      this.loadMoreMessages.emit();
+
+      setTimeout(() => {
+        const newHeight = container.scrollHeight;
+
+        container.scrollTop = newHeight - previousHeight;
+      }, 100);
     }
   }
 

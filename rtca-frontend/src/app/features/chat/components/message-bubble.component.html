@@ -4,13 +4,13 @@
     *ngIf="!message?.isOwn && message?.isFirstInGroup"
     [initials]="(message?.senderName || 'U')[0]"
     [imageUrl]="getSenderAvatar(message)"
-    [size]="28"
+    [size]="50"
   ></app-avatar>
 
   <!-- Spacer -->
   <div
     *ngIf="!message?.isOwn && !message?.isFirstInGroup"
-    style="width: 28px; flex-shrink: 0"
+    style="width: 50px; flex-shrink: 0"
   ></div>
 
   <!-- OWN MESSAGE ACTIONS -->
