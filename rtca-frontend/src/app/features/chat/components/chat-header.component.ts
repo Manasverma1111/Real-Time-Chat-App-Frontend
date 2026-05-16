@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AvatarComponent } from '../../shared/components/avatar.component';
 
 @Component({
   selector: 'app-chat-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarComponent],
   templateUrl: './chat-header.component.html',
   styles: [
     `
@@ -122,6 +123,16 @@ export class ChatHeaderComponent {
         .map((p: string) => p[0]?.toUpperCase())
         .join('') ||
       'CH'
+    );
+  }
+
+  get avatarUrl(): string {
+    return (
+      this.room?.groupImageUrl ||
+      this.room?.avatarUrl ||
+      this.room?.imageUrl ||
+      this.room?.profileImageUrl ||
+      ''
     );
   }
 

@@ -19,15 +19,16 @@
   >
     <!-- If image exists -->
     <img
-      *ngIf="imageUrl"
+      *ngIf="imageUrl && !imageError"
       [src]="imageUrl"
+      (error)="handleImageError()"
       [style.width.px]="size"
       [style.height.px]="size"
       style="object-fit: cover; border-radius: 50%"
     />
 
     <!-- Fallback to initials -->
-    <span *ngIf="!imageUrl">
+    <span *ngIf="!imageUrl || imageError">
       {{ initials }}
     </span>
   </div>

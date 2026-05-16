@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AvatarComponent } from '../../shared/components/avatar.component';
 
 @Component({
   selector: 'app-room-list-item',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarComponent],
   templateUrl: './room-list-item.component.html',
   styles: [
     `
@@ -133,6 +134,19 @@ export class RoomListItemComponent {
         .map((p: string) => p[0]?.toUpperCase())
         .join('') ||
       'RM'
+    );
+  }
+
+  /*
+   SUPPORT ALL POSSIBLE BACKEND FIELDS
+  */
+  get avatarUrl(): string {
+    return (
+      this.room?.groupImageUrl ||
+      this.room?.avatarUrl ||
+      this.room?.imageUrl ||
+      this.room?.profileImageUrl ||
+      ''
     );
   }
 

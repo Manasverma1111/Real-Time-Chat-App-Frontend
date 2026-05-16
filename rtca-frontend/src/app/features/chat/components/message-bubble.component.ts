@@ -157,6 +157,16 @@ export class MessageBubbleComponent {
     this.showReactions = false;
   }
 
+  getSenderAvatar(message: any): string {
+    return (
+      message?.avatarUrl ||
+      message?.profileImageUrl ||
+      message?.senderProfileImage ||
+      message?.senderAvatar ||
+      ''
+    );
+  }
+
   /*
  MEDIA TYPE HELPERS
  More robust media detection for S3 URLs

@@ -481,6 +481,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           roomId: room.roomId,
           name: room.name,
           type: room.type,
+          avatarUrl: room.avatarUrl || '',
           memberCount: room.memberCount || 0,
           onlineCount: room.onlineCount || 0,
           lastMessage: 'No messages yet',
@@ -548,6 +549,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           return {
             ...msg,
             isOwn,
+            avatarUrl: this.resolveProfileImage(msg.avatarUrl),
             isFirstInGroup: !isSameSender,
           };
         });
@@ -660,6 +662,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         {
           ...msg,
           isOwn,
+          avatarUrl: this.resolveProfileImage(msg.avatarUrl),
           isFirstInGroup: !isSameSender,
         },
       ];
@@ -717,6 +720,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       roomId: this.selectedRoom.id,
       senderId: sessionStorage.getItem('userId'),
       senderName: sessionStorage.getItem('username') || 'User',
+      avatarUrl: this.currentUser?.avatarUrl || '',
       content: text,
     });
   }
@@ -741,6 +745,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             roomId: this.selectedRoom.id,
             senderId: userId,
             senderName: sessionStorage.getItem('username') || 'User',
+            avatarUrl: this.currentUser?.avatarUrl || '',
             content: res.filePath,
           });
         }, 300);
@@ -1382,14 +1387,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   resolveProfileImage(url?: string | null): string {
     if (!url || url.trim() === '') {
-      return 'https://via.placeholder.com/80';
+      return '';
     }
 
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image')) {
       return url;
     }
 
-    return 'https://via.placeholder.com/80';
+    return '';
   }
 
   markNotificationAsRead(notification: any) {
@@ -1440,6 +1445,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         roomId,
         senderId: sessionStorage.getItem('userId'),
         senderName: sessionStorage.getItem('username') || 'User',
+        avatarUrl: this.currentUser?.avatarUrl || '',
         content: this.forwardingMessage.content,
       });
     }

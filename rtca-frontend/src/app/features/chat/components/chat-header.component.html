@@ -1,6 +1,6 @@
 <div class="chat-header">
   <div class="header-left">
-    <div class="room-avatar-sm">{{ initials }}</div>
+    <app-avatar [initials]="initials" [imageUrl]="avatarUrl" [size]="36"></app-avatar>
 
     <div class="header-info">
       <div class="room-title">{{ room?.name }}</div>

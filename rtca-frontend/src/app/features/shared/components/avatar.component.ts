@@ -16,9 +16,19 @@ export class AvatarComponent {
   @Input() status?: string;
   @Input() imageUrl?: string;
 
+  /*
+   FIX:
+   fallback to initials if image fails
+  */
+  imageError = false;
+
   Math = Math;
 
   get fontSize(): number {
     return this.size * 0.35;
+  }
+
+  handleImageError() {
+    this.imageError = true;
   }
 }

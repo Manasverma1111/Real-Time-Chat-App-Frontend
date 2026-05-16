@@ -3,7 +3,7 @@
   <app-avatar
     *ngIf="!message?.isOwn && message?.isFirstInGroup"
     [initials]="(message?.senderName || 'U')[0]"
-    [imageUrl]="message?.avatarUrl"
+    [imageUrl]="getSenderAvatar(message)"
     [size]="28"
   ></app-avatar>
 
