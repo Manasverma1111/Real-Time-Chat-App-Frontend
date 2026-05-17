@@ -450,6 +450,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   // presence subscription
   private presenceSubscription: any;
 
+  // seen subscription for marking notifications as read when user views them
+  private seenSubscription: any;
+
   constructor(
     private roomService: RoomService,
     private messageService: MessageService,
@@ -497,6 +500,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     // CLEAN PRESENCE SUBSCRIPTION
     if (this.presenceSubscription) {
       this.presenceSubscription.unsubscribe();
+    }
+
+    // CLEAN SEEN SUBSCRIPTION
+    if (this.seenSubscription) {
+      this.seenSubscription.unsubscribe();
     }
   }
 
@@ -828,6 +836,14 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.currentSubscription.unsubscribe();
     }
 
+    /*
+   UNSUBSCRIBE PREVIOUS SEEN SUBSCRIPTION
+   when switching rooms
+  */
+    if (this.seenSubscription) {
+      this.seenSubscription.unsubscribe();
+    }
+
     this.currentSubscription = this.socketService.subscribe(roomId, (msg: any) => {
       if (String(msg.roomId) !== String(this.selectedRoom?.id)) {
         return;
@@ -895,6 +911,38 @@ export class ChatComponent implements OnInit, OnDestroy {
           },
         });
       }
+
+      this.cdr.detectChanges();
+    });
+
+    /*
+   SUBSCRIBE TO SEEN EVENTS FOR THIS ROOM
+   When another user reads messages, backend broadcasts
+   to /topic/seen/{roomId}. We update all own messages
+   in this room to seen=true so ✓ becomes ✓✓ instantly.
+  */
+    this.seenSubscription = this.socketService.subscribeSeen(roomId, (event: any) => {
+      const currentUserId = sessionStorage.getItem('userId');
+
+      /*
+       Only update if the reader is NOT the current user
+       (we don't want to mark our own read as seen)
+      */
+      if (String(event.seenByUserId) === String(currentUserId)) {
+        return;
+      }
+
+      console.log('👁 Seen event received for room:', event.roomId);
+
+      /*
+       Mark all own messages in this room as seen
+      */
+      this.messages = this.messages.map((msg: any) => {
+        if (msg.isOwn) {
+          return { ...msg, seen: true };
+        }
+        return msg;
+      });
 
       this.cdr.detectChanges();
     });

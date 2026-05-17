@@ -159,4 +159,20 @@ export class SocketService {
     this.stompClient?.deactivate();
     this.stompClient = null;
   }
+
+  /*
+ REAL-TIME SEEN EVENTS
+ Subscribes to /topic/seen/{roomId}
+ Fires when another user reads messages in this room.
+ Sender uses this to update ✓ → ✓✓ instantly.
+*/
+  subscribeSeen(roomId: string, callback: (event: any) => void) {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.warn('Socket not connected — cannot subscribe to seen events');
+      return null;
+    }
+    return this.stompClient.subscribe(`/topic/seen/${roomId}`, (message) => {
+      callback(JSON.parse(message.body));
+    });
+  }
 }
