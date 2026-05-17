@@ -63,4 +63,13 @@ export class AuthService {
 
     return this.api.post('/media/upload/profile', formData);
   }
+
+  /*
+   FETCH ANY USER'S PUBLIC PROFILE BY ID
+   Used by members modal to show user details
+   Maps to: GET /auth/user/{userId}
+  */
+  getUserById(userId: string) {
+    return this.api.get(`/auth/user/${userId}`);
+  }
 }

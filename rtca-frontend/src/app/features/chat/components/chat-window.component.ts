@@ -212,6 +212,7 @@ export class ChatWindowComponent implements AfterViewInit, OnChanges {
   @Output() leaveRoom = new EventEmitter<void>();
   @Output() deleteRoom = new EventEmitter<void>();
   @Output() deleteForEveryone = new EventEmitter<string>();
+  @Output() viewUserProfile = new EventEmitter<{ userId: string; username: string }>();
 
   /*
    FORWARD: emits the full message object
@@ -410,5 +411,9 @@ export class ChatWindowComponent implements AfterViewInit, OnChanges {
   */
   handleForwardMessage(message: any) {
     this.forwardMessage.emit(message);
+  }
+
+  handleViewProfile(sender: { userId: string; username: string }) {
+    this.viewUserProfile.emit(sender);
   }
 }

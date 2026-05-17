@@ -5,6 +5,8 @@
     [initials]="(message?.senderName || 'U')[0]"
     [imageUrl]="getSenderAvatar(message)"
     [size]="50"
+    class="avatar-clickable"
+    (click)="handleViewProfile()"
   ></app-avatar>
 
   <!-- Spacer -->
@@ -19,7 +21,6 @@
     class="bubble-actions"
     style="display: flex; align-items: center; gap: 2px; position: relative"
   >
-    <!-- 😊 -->
     <button
       (click)="toggleReactionMenu()"
       style="
@@ -35,7 +36,6 @@
       😊
     </button>
 
-    <!-- EMOJI PICKER -->
     <div
       *ngIf="showReactions"
       style="
@@ -58,7 +58,6 @@
       <span (click)="handleReaction('😮')" style="cursor: pointer; font-size: 16px">😮</span>
     </div>
 
-    <!-- ⋮ 3-dot -->
     <button
       (click)="toggleMenu()"
       style="
@@ -74,7 +73,6 @@
       ⋮
     </button>
 
-    <!-- CONTEXT MENU -->
     <div
       *ngIf="showMenu"
       style="
@@ -90,7 +88,6 @@
         white-space: nowrap;
       "
     >
-      <!-- FORWARD -->
       <div
         (click)="handleForward()"
         style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px"
@@ -113,12 +110,13 @@
     </div>
 
     <div class="bubble-text">
-      <!-- IMAGE -->
+      <!-- IMAGE — click opens lightbox -->
       <img
         *ngIf="isImage(message?.content)"
         [src]="message?.content"
         class="media-image"
         alt="uploaded-image"
+        (click)="openLightbox(message?.content)"
       />
 
       <!-- VIDEO -->
@@ -139,16 +137,13 @@
         *ngIf="
           !isImage(message?.content) && !isVideo(message?.content) && !isFile(message?.content)
         "
+        >{{ message?.content }}</span
       >
-        {{ message?.content }}
-      </span>
     </div>
 
     <div class="bubble-time">
       {{ message?.createdAt | date: 'shortTime' }}
-      <span *ngIf="message?.isOwn">
-        {{ message?.seen ? ' ✓✓' : ' ✓' }}
-      </span>
+      <span *ngIf="message?.isOwn">{{ message?.seen ? ' ✓✓' : ' ✓' }}</span>
     </div>
   </div>
 
@@ -158,7 +153,6 @@
     class="bubble-actions"
     style="display: flex; align-items: center; gap: 2px; position: relative"
   >
-    <!-- 😊 -->
     <button
       (click)="toggleReactionMenu()"
       style="
@@ -174,7 +168,6 @@
       😊
     </button>
 
-    <!-- EMOJI PICKER -->
     <div
       *ngIf="showReactions"
       style="
@@ -197,7 +190,6 @@
       <span (click)="handleReaction('😮')" style="cursor: pointer; font-size: 16px">😮</span>
     </div>
 
-    <!-- ⋮ 3-dot for OTHER messages too (forward only) -->
     <button
       (click)="toggleMenu()"
       style="
@@ -213,7 +205,6 @@
       ⋮
     </button>
 
-    <!-- CONTEXT MENU (forward only for other messages) -->
     <div
       *ngIf="showMenu"
       style="
@@ -269,3 +260,24 @@
     </div>
   </ng-container>
 </ng-container>
+
+<!-- IMAGE LIGHTBOX OVERLAY -->
+<div *ngIf="showLightbox" class="lightbox-overlay" (click)="closeLightbox()">
+  <button class="lightbox-close" (click)="closeLightbox()">X</button>
+
+  <a
+    class="lightbox-download"
+    [href]="lightboxUrl"
+    target="_blank"
+    (click)="$event.stopPropagation()"
+    title="Open original"
+    >↓</a
+  >
+
+  <img
+    class="lightbox-img"
+    [src]="lightboxUrl"
+    alt="full-size"
+    (click)="$event.stopPropagation()"
+  />
+</div>

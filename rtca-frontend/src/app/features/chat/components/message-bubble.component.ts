@@ -106,6 +106,89 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
       .media-file a:hover {
         text-decoration: underline;
       }
+
+      /*
+       AVATAR CLICKABLE CURSOR
+      */
+      .avatar-clickable {
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+      }
+
+      .avatar-clickable:hover {
+        opacity: 0.8;
+      }
+
+      /*
+       IMAGE LIGHTBOX OVERLAY
+      */
+      .lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.92);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+        padding: 20px;
+      }
+
+      .lightbox-img {
+        max-width: 92vw;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+        cursor: default;
+      }
+
+      .lightbox-close {
+        position: fixed;
+        top: 18px;
+        right: 22px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease;
+        z-index: 100000;
+      }
+
+      .lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.22);
+      }
+
+      .lightbox-download {
+        position: fixed;
+        top: 18px;
+        right: 68px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease;
+        z-index: 100000;
+        text-decoration: none;
+      }
+
+      .lightbox-download:hover {
+        background: rgba(255, 255, 255, 0.22);
+      }
     `,
   ],
 })
@@ -121,8 +204,31 @@ export class MessageBubbleComponent {
    Emits the full message so parent can show room picker
   */
   @Output() forward = new EventEmitter<any>();
+
+  /*
+   VIEW PROFILE EVENT
+   Emits sender info when avatar is clicked
+  */
+  @Output() viewProfile = new EventEmitter<{ userId: string; username: string }>();
+
   showMenu = false;
   showReactions = false;
+
+  /*
+   IMAGE LIGHTBOX
+  */
+  showLightbox = false;
+  lightboxUrl = '';
+
+  openLightbox(url: string) {
+    this.lightboxUrl = url;
+    this.showLightbox = true;
+  }
+
+  closeLightbox() {
+    this.showLightbox = false;
+    this.lightboxUrl = '';
+  }
 
   toggleMenu() {
     this.showMenu = !this.showMenu;
@@ -141,6 +247,17 @@ export class MessageBubbleComponent {
   handleForward() {
     this.forward.emit(this.message);
     this.showMenu = false;
+  }
+
+  /*
+   AVATAR CLICKED — emit sender info up the chain
+  */
+  handleViewProfile() {
+    if (!this.message?.senderId) return;
+    this.viewProfile.emit({
+      userId: this.message.senderId,
+      username: this.message.senderName || 'User',
+    });
   }
 
   // Reactions

@@ -419,6 +419,14 @@ export class ChatComponent implements OnInit, OnDestroy {
   selectedForwardRooms: string[] = [];
   forwardingInProgress = false;
 
+  /*
+ USER PROFILE VIEWER
+ Shows when clicking a member in the members modal
+*/
+  showUserProfileModal = false;
+  viewingUserProfile: any = null;
+  loadingUserProfile = false;
+
   // PAGINATION FOR MESSAGES
   currentPage = 0;
   pageSize = 20;
@@ -535,7 +543,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedRoom = room;
 
     const currentUserId = sessionStorage.getItem('userId');
-
     if (currentUserId) {
       localStorage.setItem(`selectedRoomId_${currentUserId}`, room.roomId || room.id);
     }
@@ -543,6 +550,19 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.loadMessages(room.id, true);
     this.subscribeToRoom(room.id);
     this.subscribeTyping(room.id);
+
+    /*
+   SILENTLY FETCH ROOM MEMBERS
+   so roomMembers is always available for
+   profile role lookup when clicking bubble avatars
+  */
+    this.roomService.getRoomMembers(room.id).subscribe({
+      next: (data: any) => {
+        this.roomMembers = data || [];
+      },
+      error: () => {},
+    });
+
     this.cdr.detectChanges();
   }
 
@@ -1528,6 +1548,62 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.showForwardModal = false;
     this.forwardingMessage = null;
     this.selectedForwardRooms = [];
+  }
+
+  /*
+ OPEN USER PROFILE VIEWER
+ member: { userId, username, role? }
+ role here is the ROOM role (ADMIN/MEMBER)
+ which takes priority over system role from API
+*/
+  openUserProfile(member: any) {
+    this.loadingUserProfile = true;
+    this.showUserProfileModal = true;
+    this.viewingUserProfile = null;
+
+    /*
+   ROOM ROLE RESOLUTION:
+   1. If member already has a role (from members modal) → use it directly
+   2. If coming from bubble avatar (only userId+username) →
+      look up in roomMembers array which is already loaded
+   3. Fallback to system role from API
+  */
+    const roomRole =
+      member?.role ||
+      this.roomMembers.find((m: any) => String(m.userId) === String(member.userId))?.role ||
+      null;
+
+    this.authService.getUserById(member.userId).subscribe({
+      next: (user: any) => {
+        this.viewingUserProfile = {
+          ...user,
+          avatarUrl: this.resolveProfileImage(user?.avatarUrl),
+          role: roomRole || user?.role,
+        };
+        this.loadingUserProfile = false;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Failed to load user profile:', err);
+        this.loadingUserProfile = false;
+        this.viewingUserProfile = {
+          username: member.username,
+          avatarUrl: '',
+          bio: '',
+          fullName: '',
+          role: roomRole || '',
+        };
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /*
+ CLOSE USER PROFILE VIEWER
+*/
+  closeUserProfileModal() {
+    this.showUserProfileModal = false;
+    this.viewingUserProfile = null;
   }
 
   getRoomInitials(name: string): string {
