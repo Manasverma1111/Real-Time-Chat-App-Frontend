@@ -2,6 +2,9 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AvatarComponent } from '../../shared/components/avatar.component';
 
+// ROOM LIST ITEM COMPONENT: this component represents a single chat room in the list of rooms displayed in the sidebar. 
+// It displays the room's avatar, name, last message, and unread message count. 
+// The component receives the room information, active state, and unread count as inputs and emits an event when the user selects the room.
 @Component({
   selector: 'app-room-list-item',
   standalone: true,
@@ -114,6 +117,8 @@ import { AvatarComponent } from '../../shared/components/avatar.component';
   ],
 })
 export class RoomListItemComponent {
+
+  // INPUTS FOR ROOM DATA AND STATE
   @Input() room: any;
   @Input() isActive: boolean = false;
 
@@ -123,8 +128,14 @@ export class RoomListItemComponent {
   */
   @Input() unreadCount: number = 0;
 
+  // OUTPUT FOR ROOM SELECTION
   @Output() select = new EventEmitter<any>();
 
+  // initials: this computed property generates the initials to be displayed in the avatar when there is no image available. 
+  // It first checks if the room has an avatar property and uses that. 
+  // If not, it takes the room name, splits it into words, 
+  // takes the first letter of the first two words, converts them to uppercase, and joins them together. 
+  // If there is no name, it defaults to 'RM'.
   get initials(): string {
     return (
       this.room?.avatar ||
@@ -140,6 +151,7 @@ export class RoomListItemComponent {
   /*
    SUPPORT ALL POSSIBLE BACKEND FIELDS
   */
+//  avatarUrl: this computed property determines the URL of the avatar image to be displayed for the room.
   get avatarUrl(): string {
     return (
       this.room?.groupImageUrl ||
@@ -150,6 +162,8 @@ export class RoomListItemComponent {
     );
   }
 
+  // onClick: this method is called when the user clicks on the room item. 
+  // It emits the select event with the room information, allowing the parent component to handle the room selection and display the corresponding chat window.
   onClick() {
     this.select.emit(this.room);
   }

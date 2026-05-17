@@ -1,20 +1,3 @@
-// import { HttpInterceptorFn } from '@angular/common/http';
-
-// export const authInterceptor: HttpInterceptorFn = (req, next) => {
-//   const token = localStorage.getItem('connecthub_token');
-
-//   if (token) {
-//     req = req.clone({
-//       setHeaders: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//   }
-
-//   return next(req);
-// };
-// auth.interceptor.ts
-
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -29,6 +12,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const token = sessionStorage.getItem('connecthub_token');
 
+  // Attach token for all non-public requests
   if (token) {
     req = req.clone({
       setHeaders: {
@@ -37,5 +21,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
+  // Pass the request to the next handler
   return next(req);
 };

@@ -1,3 +1,8 @@
+<!-- SIGNUP COMPONENT: this component provides the user interface and logic for the signup page of the application. 
+ It includes a form with fields for full name, username, email, and password, as well as a button 
+ for submitting the form and initiating Google signup. 
+ The component handles form validation, displays error messages, 
+ and interacts with the AuthService to create a new user account and manage user authentication state.  -->
 <div class="auth-body">
   <p class="auth-subheading">Create your account in seconds</p>
 
@@ -84,46 +89,3 @@
     </button>
   </form>
 </div>
-
-<!-- <div class="auth-body">
-  <p class="auth-subheading">Create your account in seconds</p>
-
-  <button type="button" class="google-btn" (click)="googleLogin()">Continue with Google</button>
-
-  <div class="auth-divider">
-    <span class="divider-line"></span>
-    <span class="divider-label">or</span>
-    <span class="divider-line"></span>
-  </div>
-
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <div class="field-row">
-      <div class="field">
-        <label>Full name</label>
-        <app-input [control]="form.controls['fullName']"></app-input>
-      </div>
-
-      <div class="field">
-        <label>Username</label>
-        <app-input [control]="form.controls['username']"></app-input>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Email</label>
-      <app-input type="email" [control]="form.controls['email']"></app-input>
-    </div>
-
-    <div class="field">
-      <label>Password</label>
-      <app-input type="password" [control]="form.controls['password']"></app-input>
-    </div>
-
-    <div *ngIf="error" class="auth-error">{{ error }}</div>
-    <div *ngIf="success" class="auth-success">{{ success }}</div>
-
-    <button type="submit" class="submit-btn" [disabled]="loading">
-      {{ loading ? 'Creating...' : 'Create account' }}
-    </button>
-  </form>
-</div> -->

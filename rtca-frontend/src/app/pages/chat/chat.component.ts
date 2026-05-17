@@ -13,6 +13,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { RoomService } from '../../core/services/room.service';
 import { NotificationService } from '../../core/services/notification.service';
 
+// CHAT COMPONENT: this is the main component for the chat page.
+// It manages the state and logic for displaying chat rooms, messages, and notifications.
 @Component({
   selector: 'app-chat',
   standalone: true,
@@ -340,12 +342,14 @@ import { NotificationService } from '../../core/services/notification.service';
   ],
 })
 export class ChatComponent implements OnInit, OnDestroy {
+  // COMPONENT STATE
   rooms: any[] = [];
   selectedRoom: any = null;
   messages: any[] = [];
   publicGroups: any[] = [];
   loadingRooms = false;
 
+  // SOCKET
   socketConnected = false;
   private currentSubscription: any;
 
@@ -374,10 +378,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   memberSearch = '';
   searchedNewMembers: any[] = [];
 
+  // TYPING INDICATOR
   typingUser = '';
   private typingSubscription: any;
   private typingTimer: any;
 
+  // USER PROFILE
   showProfileModal = false;
   profileForm = {
     fullName: '',
@@ -400,6 +406,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     avatarUrl: '',
   };
 
+  // group avatar upload
   selectedGroupFile: File | null = null;
   uploadingGroupAvatar = false;
   isCurrentUserRoomAdmin = false;
@@ -435,10 +442,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   /*
 
-   =========================================
    REAL-TIME NOTIFICATION SUBSCRIPTION
    Replaces polling interval
-   =========================================
   */
   private notificationSubscription: any;
 
@@ -452,6 +457,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
   ) {}
 
+  // ngOnInit: this lifecycle hook is called when the component is initialized.
   ngOnInit() {
     this.loadCurrentUser();
     this.connectSocket();
@@ -464,6 +470,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.loadNotifications();
   }
 
+  // connectSocket: this method is responsible for establishing a WebSocket connection to the backend server using the SocketService.
   ngOnDestroy() {
     /*
      DISCONNECT SOCKET
@@ -485,9 +492,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
+  // loadRooms: this method fetches the list of chat rooms that the user is a member of from the backend API using the RoomService.
   loadRooms() {
     this.loadingRooms = true;
 
+    // added error handling and loading state management to room loading logic
     this.roomService.getUserRooms().subscribe({
       next: (data: any) => {
         this.rooms = (data || []).map((room: any) => ({
@@ -501,17 +510,21 @@ export class ChatComponent implements OnInit, OnDestroy {
           lastMessage: 'Loading...',
         }));
 
+        // TRY TO RESTORE LAST SELECTED ROOM: 
+        // this logic attempts to restore the last selected room for the user by checking localStorage for a saved room ID.
         const currentUserId = sessionStorage.getItem('userId');
 
         const savedRoomId = currentUserId
           ? localStorage.getItem(`selectedRoomId_${currentUserId}`)
           : null;
 
+          // if a saved room ID exists, we check if it is still valid (i.e., the user is still a member of that room).
         if (savedRoomId) {
           const matchedRoom = this.rooms.find(
             (room: any) => String(room.roomId) === String(savedRoomId),
           );
 
+          // if the saved room ID is valid, we automatically select that room and load its messages.
           if (matchedRoom) {
             this.selectRoom(matchedRoom);
             this.loadingRooms = false;
@@ -520,10 +533,14 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         }
 
+        // if there is no saved room ID or if the saved room ID is no longer valid, 
+        // we default to selecting the first room in the list (if any) and loading its messages.
         if (this.rooms.length > 0) {
           this.selectRoom(this.rooms[0]);
         }
 
+        // after loading rooms, we also call hydrateSidebarLastMessages 
+        // to fetch the latest message for each room and display it in the sidebar.
         this.hydrateSidebarLastMessages();
 
         this.loadingRooms = false;
@@ -537,6 +554,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // loadPublicGroups: this method fetches the list of public chat groups from the backend API using the RoomService.
   selectRoom(room: any) {
     if (!room) return;
 
@@ -566,6 +584,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // loadMessages: this method loads the messages for a specific chat room. 
+  // It supports pagination and can either reset the message list or append older messages based on the parameters passed. 
+  // The method also handles marking messages as seen and updating the notification state accordingly. 
+  // Error handling is included to manage any issues that arise during the API call to fetch messages.
   loadMessages(roomId: string, reset: boolean = true) {
     if (this.loadingOlderMessages) return;
 
@@ -577,6 +599,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.loadingOlderMessages = true;
 
+    // added error handling and loading state management to message loading logic
     this.messageService.getMessagesByRoom(roomId, this.currentPage, this.pageSize).subscribe({
       next: (data: any) => {
         const formattedMessages = (data || []).map((msg: any, index: number, arr: any[]) => {
@@ -609,6 +632,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.updateRoomLastMessage(roomId, this.getSidebarMessagePreview(latestMessage));
           }
 
+          // after loading messages for the first time, 
+          // we scroll to the bottom of the chat window to show the latest messages.
           setTimeout(() => {
             const container = document.querySelector('.messages-area') as HTMLElement;
 
@@ -652,6 +677,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
             this.unreadNotificationCount = this.notifications.filter((n: any) => !n.read).length;
 
+            // after marking messages as seen and updating notifications, 
+            // we call detectChanges to ensure the UI reflects the updated state.
             this.cdr.detectChanges();
           },
         });
@@ -666,6 +693,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // loadOlderMessages: this method loads older messages for the currently selected chat room.
   loadOlderMessages() {
     if (!this.selectedRoom) return;
 
@@ -674,6 +702,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.loadMessages(this.selectedRoom.id, false);
   }
 
+  // connectSocket: this method establishes a WebSocket connection and subscribes to real-time notifications.
   connectSocket() {
     const token = sessionStorage.getItem('connecthub_token');
 
@@ -684,13 +713,12 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.socketConnected = true;
 
         /*
-         =========================================
          SUBSCRIBE TO REAL-TIME NOTIFICATIONS
          once socket is connected and userId known
-         =========================================
         */
         const userId = sessionStorage.getItem('userId');
 
+        // if a user ID is available, we subscribe to real-time notifications for that user using the SocketService.
         if (userId) {
           this.notificationSubscription = this.socketService.subscribeNotifications(
             userId,
@@ -719,6 +747,9 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
+  // subscribeToRoom: this method subscribes to real-time messages for a specific chat room using the SocketService. 
+  // It handles incoming messages by checking if they belong to the currently selected room and updating the message list accordingly. 
+  // The method also manages marking messages as seen and updating notifications when new messages are received while the user is in the room.
   subscribeToRoom(roomId: string) {
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
@@ -737,6 +768,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       const isOwn = String(msg.senderId) === String(sessionStorage.getItem('userId'));
       const isSameSender = last && String(last.senderId) === String(msg.senderId);
 
+      // when a new message is received via the WebSocket, we first check if it belongs to the currently selected room. 
+      // If it does, we determine if the message was sent by the current user and if it is from the same sender as the last message. 
+      // We then update the messages array to include the new message, 
+      // ensuring that the avatar is only shown for the first message in a group of messages from the same sender.
       this.messages = [
         ...this.messages,
         {
@@ -753,7 +788,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.updateRoomLastMessage(roomId, this.getSidebarMessagePreview(msg));
 
       /*
- WHATSAPP-LIKE BEHAVIOR
  If user is already inside the room,
  immediately mark messages as seen
  and clear notifications for this room.
@@ -793,6 +827,9 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // subscribeTyping: this method subscribes to typing indicators for a specific chat room using the SocketService.
+  // It manages the display of typing indicators by showing the name of the user 
+  // who is typing and automatically hiding the indicator after a short period of inactivity.
   sendMessage(text: string) {
     if (!this.selectedRoom || !text.trim()) return;
 
@@ -801,6 +838,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // when the user sends a message, we first check if a room is selected and if the message text is not empty. 
+    // We also check if the WebSocket connection is established before attempting to send the message. 
+    // If all conditions are met, we use the SocketService to send the message to the backend server, 
+    // including relevant information such as the room ID, sender ID, sender name, avatar URL, and message content.
     this.socketService.send({
       roomId: this.selectedRoom.id,
       senderId: sessionStorage.getItem('userId'),
@@ -810,6 +851,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // uploadMedia: this method handles the uploading of media files (such as images or videos) to the backend server.
+  // It first checks if a room is selected and if the user ID is available. 
+  // It then creates a FormData object to hold the file and relevant information, 
+  // and uses the MessageService to upload the media.
   uploadMedia(file: File) {
     if (!this.selectedRoom) return;
 
@@ -821,10 +866,17 @@ export class ChatComponent implements OnInit, OnDestroy {
     formData.append('senderId', userId);
     formData.append('file', file);
 
+    // when a media file is uploaded, we create a FormData object to hold the file 
+    // and relevant information such as the room ID and sender ID. 
+    // We then use the MessageService to upload the media to the backend server. 
+    // Upon successful upload, we send a message through the WebSocket with the file path of the uploaded media as the content. 
+    // Error handling is included to manage any issues that arise during the media upload process.
     this.messageService.uploadMedia(formData).subscribe({
       next: (res: any) => {
         console.log('✅ Upload response:', res);
 
+        // after successfully uploading the media, 
+        // we send a message through the WebSocket with the file path of the uploaded media as the content.
         setTimeout(() => {
           this.socketService.send({
             roomId: this.selectedRoom.id,
@@ -842,10 +894,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // handleCreateRoom: this method is called when the user clicks the button to create a new chat room. 
+  // It sets the state to show the create room modal, allowing the user to enter details for the new room.
   handleCreateRoom() {
     this.showCreateRoomModal = true;
   }
 
+  // closeCreateRoomModal: this method is responsible for closing the create room modal 
+  // and resetting all related state variables to their default values.
   closeCreateRoomModal() {
     this.showCreateRoomModal = false;
     this.newRoomName = '';
@@ -855,6 +911,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedMembers = [];
   }
 
+  // submitCreateRoom: this method is called when the user submits the form to create a new chat room.
+  // It first checks if the room name is valid and if a room creation process is not already in progress. 
+  // It then uses the RoomService to send a request to the backend API to create the new room with the specified details. 
+  // Upon successful creation, it closes the modal and reloads the list of rooms to include the newly created room. 
+  // Error handling is included to manage any issues that arise during the room creation process.
   submitCreateRoom() {
     if (!this.newRoomName.trim() || this.creatingRoom) return;
 
@@ -882,6 +943,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
+  // loadPublicGroups: this method is responsible for loading the list of public chat groups.
   loadPublicGroups() {
     this.roomService.getPublicGroups().subscribe({
       next: (groups: any) => {
@@ -893,6 +955,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // joinGroup: this method is called when the user clicks the button to join a public chat group.
+  // It uses the RoomService to send a request to the backend API to join the specified public group. 
+  // Upon successful joining, it reloads the list of rooms and public groups to reflect the change, 
+  // and removes the joined group from the list of public groups. 
+  // Error handling is included to manage any issues that arise during the process of joining a group.
   joinGroup(room: any) {
     this.roomService.joinPublicGroup(room.roomId).subscribe({
       next: () => {
@@ -907,6 +974,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // handleLogout: this method is called when the user clicks the logout button.
+  // It first retrieves the user ID from session storage and disconnects the WebSocket connection. 
+  // It then uses the AuthService to mark the user as offline in the backend, and finally logs the user out by clearing session storage and navigating to the login page. 
+  // Error handling is included to manage any issues that arise during the logout process, ensuring that the user is logged out even if there are errors in marking them as offline.
   handleLogout() {
     const userId = sessionStorage.getItem('userId');
 
@@ -921,6 +992,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
     }
 
+    // after attempting to mark the user as offline, we proceed to log the user out by clearing session storage and navigating to the login page.
     this.authService.logout().subscribe({
       next: () => {
         sessionStorage.removeItem('connecthub_token');
@@ -929,6 +1001,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       },
 
+      // even if there is an error during the logout process, 
+      // we still want to ensure that the user is logged out on the client side by clearing session storage and navigating to the login page.
       error: () => {
         sessionStorage.removeItem('connecthub_token');
         sessionStorage.removeItem('userId');
@@ -938,6 +1012,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // searchUsers: this method is called to search for users based on the input provided by the user.
   searchUsers() {
     if (!this.userSearch.trim()) {
       this.searchedUsers = [];
@@ -946,6 +1021,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.searchLoading = true;
 
+    // when the user types in the search input to find users to add to a room, 
+    // we first check if the input is not empty. 
+    // If it is empty, we clear the search results.
     this.authService.searchUsers(this.userSearch.trim()).subscribe({
       next: (users: any) => {
         const currentUserId = sessionStorage.getItem('userId');
@@ -967,16 +1045,19 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // addMember: this method is called when the user selects a user from the search results to add as a member to the new room being created.
   addMember(user: any) {
     this.selectedMembers = [...this.selectedMembers, user];
     this.userSearch = '';
     this.searchedUsers = [];
   }
 
+  // removeMember: this method is called when the user clicks the button to remove a member from the list of selected members for the new room being created.
   removeMember(userId: string) {
     this.selectedMembers = this.selectedMembers.filter((m) => String(m.userId) !== String(userId));
   }
 
+  // handleViewMembers: this method is called to view the members of the selected room.
   handleViewMembers() {
     if (!this.selectedRoom) return;
 
@@ -989,6 +1070,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // closeMembersModal: this method is called to close the members modal.
   closeMembersModal() {
     this.showMembersModal = false;
     this.roomMembers = [];
@@ -996,6 +1078,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.searchedNewMembers = [];
   }
 
+  // handleLeaveRoom: this method is called when the user clicks the button to leave the currently selected room.
   handleLeaveRoom() {
     if (!this.selectedRoom) return;
 
@@ -1008,6 +1091,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // handleDeleteRoom: this method is called when the user clicks the button to delete the currently selected room.
   handleDeleteRoom() {
     if (!this.selectedRoom) return;
 
@@ -1020,12 +1104,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // searchNewMembers: this method is called to search for new members to add to the selected room.
   searchNewMembers() {
     if (!this.memberSearch.trim() || !this.selectedRoom) {
       this.searchedNewMembers = [];
       return;
     }
 
+    // when the user types in the search input to find new members to add to the selected room, 
+    // we first check if the input is not empty and if a room is selected. 
+    // If either condition is not met, we clear the search results.
     this.authService.searchUsers(this.memberSearch.trim()).subscribe({
       next: (users: any) => {
         const existingIds = this.roomMembers.map((m) => String(m.userId));
@@ -1044,6 +1132,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // addMemberToExistingRoom: this method is called to add a member to the selected room.
   addMemberToExistingRoom(user: any) {
     if (!this.selectedRoom) return;
 
@@ -1060,6 +1149,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // removeMemberFromExistingRoom: this method is called to remove a member from the selected room.
   removeMemberFromExistingRoom(memberId: string) {
     if (!this.selectedRoom) return;
 
@@ -1074,6 +1164,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // handleTyping: this method is called when the user is typing a message in the input field.
   handleTyping() {
     if (!this.selectedRoom) return;
 
@@ -1084,6 +1175,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // subscribeTyping: this method subscribes to typing indicators for the selected room using the SocketService.
   subscribeTyping(roomId: string) {
     if (this.typingSubscription) {
       this.typingSubscription.unsubscribe();
@@ -1096,6 +1188,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // when a typing event is received via the WebSocket, we first check if the event is from the current user. 
+      // If it is, we ignore the event.
       if (event.typing) {
         this.typingUser = event.userName;
 
@@ -1111,6 +1205,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // openProfileModal: this method is called when the user clicks the button to edit their profile.
   openProfileModal() {
     this.profileForm = {
       fullName: this.currentUser?.fullName || '',
@@ -1121,17 +1216,20 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.showProfileModal = true;
   }
 
+  // closeProfileModal: this method is called to close the profile editing modal and reset any related state variables.
   closeProfileModal() {
     this.showProfileModal = false;
     this.selectedProfileFile = null;
   }
 
+  // onProfileFileSelected: this method is called when the user selects a new profile image file.
   onProfileFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
     this.selectedProfileFile = file;
 
+    // when a new profile image file is selected, we create a FileReader to read the file and convert it to a data URL.
     const reader = new FileReader();
     reader.onload = () => {
       this.profileForm.avatarUrl = reader.result as string;
@@ -1140,6 +1238,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
+  // uploadProfileImageAndSave: this method is called to upload the new profile image
+  //  (if one has been selected) and save the updated profile information.
   uploadProfileImageAndSave() {
     if (!this.selectedProfileFile) {
       this.saveProfile();
@@ -1151,6 +1251,10 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.uploadingProfile = true;
 
+    // when the user saves their profile, we first check if a new profile image file has been selected. 
+    // If a file has been selected, we use the AuthService to upload the profile image to the backend server. 
+    // Upon successful upload, we update the avatar URL in the profile form and proceed to save the profile information. 
+    // Error handling is included to manage any issues that arise during the profile image upload process.
     this.authService.uploadProfileImage(this.selectedProfileFile, userId).subscribe({
       next: (res: any) => {
         this.profileForm.avatarUrl = res.filePath;
@@ -1163,6 +1267,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // saveProfile: this method is called to save the updated profile information to the backend server using the AuthService.
   saveProfile() {
     this.authService.updateProfile(this.profileForm).subscribe({
       next: (updatedUser: any) => {
@@ -1179,6 +1284,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // loadCurrentUser: this method is called to load the current user's information from the backend server using the AuthService.
   loadCurrentUser() {
     this.authService.getCurrentUser().subscribe({
       next: (user: any) => {
@@ -1197,19 +1303,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   /*
-   =========================================
    LOAD NOTIFICATIONS FROM DB ON STARTUP
    Called once on init to hydrate the list
-   =========================================
   */
-  /*
- =========================================
- LOAD NOTIFICATIONS FROM DB
- =========================================
-*/
   loadNotifications(silent: boolean = false) {
     /*
-   CRITICAL FIX:
+   CRITICAL FIX FOR USERID INCONSISTENCY:
    Backend may return userId or id depending on the endpoint.
    Try both fields with fallback.
   */
@@ -1219,6 +1318,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // when the component initializes, 
+    // we call loadNotifications to fetch the existing notifications for the user from the backend database.
     this.notificationService.getNotifications(userId).subscribe({
       next: (notifications: any) => {
         this.notifications = notifications || [];
@@ -1236,12 +1337,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   /*
- =========================================
  OPEN NOTIFICATIONS MODAL
  Always re-fetch from DB first so
  notification.id values are real UUIDs
  (WebSocket payload ids are temporary)
- =========================================
 */
   openNotificationsModal() {
     this.showNotificationsModal = true;
@@ -1292,10 +1391,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // closeNotificationsModal: this method is called to close the notifications modal.
   closeNotificationsModal() {
     this.showNotificationsModal = false;
   }
 
+  // openGroupDetailsModal: this method is called to open the group details modal.
   openGroupDetailsModal() {
     if (!this.selectedRoom) return;
 
@@ -1323,11 +1424,13 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // closeGroupDetailsModal: this method is called to close the group details modal and reset any related state variables.
   closeGroupDetailsModal() {
     this.showGroupDetailsModal = false;
     this.selectedGroupFile = null;
   }
 
+  // onGroupFileSelected: this method is called when the user selects a new group avatar image file.
   onGroupFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1342,6 +1445,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
+  // saveGroupDetails: this method is called to save the updated group details to the backend server.
   saveGroupDetails() {
     if (!this.isCurrentUserRoomAdmin) return;
     if (!this.selectedRoom) return;
@@ -1349,6 +1453,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.selectedGroupFile) {
       this.uploadingGroupAvatar = true;
 
+      // when the user saves the group details, we first check if a new group avatar file has been selected. 
+      // If a file has been selected, we use the RoomService to upload the group avatar to the backend server. 
+      // Upon successful upload, we update the room's avatar URL with the new file path and proceed to update the room details. 
+      // Error handling is included to manage any issues that arise during the group avatar upload process.
       this.roomService.uploadGroupAvatar(this.selectedRoom.id, this.selectedGroupFile).subscribe({
         next: (res: any) => {
           this.roomService.updateRoomAvatar(this.selectedRoom.id, res.filePath).subscribe({
@@ -1374,6 +1482,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.updateRoomDetailsOnly();
   }
 
+  // updateRoomDetailsOnly: this method is called to update the group details (name, description, visibility) without changing the avatar.
   updateRoomDetailsOnly() {
     if (!this.selectedRoom) return;
 
@@ -1383,6 +1492,9 @@ export class ChatComponent implements OnInit, OnDestroy {
         description: this.groupForm.description,
         visibility: this.groupForm.visibility,
       })
+
+      // after successfully updating the room details, 
+      // we update the selected room and the rooms list in the sidebar to reflect the changes.
       .subscribe({
         next: (updatedRoom: any) => {
           this.selectedRoom = {
@@ -1395,6 +1507,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             onlineCount: this.selectedRoom.onlineCount,
           };
 
+          // we also update the rooms list in the sidebar to reflect the changes to the room details.
           this.rooms = this.rooms.map((room) => {
             if (String(room.roomId) === String(updatedRoom.roomId)) {
               return {
@@ -1422,16 +1535,19 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
+  // deleteMessageForMe: this method is called to delete a message for the current user.
   deleteMessageForMe(messageId: string) {
     this.messageService.deleteMessageForMe(messageId).subscribe(() => {
       this.messages = this.messages.filter((m) => m.id !== messageId);
     });
   }
 
+  // deleteMessageForEveryone: this method is called to delete a message for everyone in the chat room.
   deleteMessageForEveryone(messageId: string) {
     console.log('Delete for everyone:', messageId);
   }
 
+  // handleReaction: this method is called when the user reacts to a message with an emoji.
   handleReaction(event: { messageId: string; emoji: string }) {
     /*
    Preserve current scroll position
@@ -1457,6 +1573,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         }, 0);
 
+        // sometimes the scroll position resets after loading messages, 
+        // so we use a timeout to restore the scroll position after the messages have been rendered.
         setTimeout(() => {
           if (messagesArea) {
             messagesArea.scrollTop = currentScrollTop;
@@ -1470,6 +1588,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // resolveProfileImage: this method is called to resolve the profile image URL for a user.
   resolveProfileImage(url?: string | null): string {
     if (!url || url.trim() === '') {
       return '';
@@ -1482,6 +1601,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  // markNotificationAsRead: this method is called to mark a specific notification as read.
   markNotificationAsRead(notification: any) {
     if (!notification || notification.read) return;
 
@@ -1525,6 +1645,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.forwardingInProgress = true;
 
+    // when the user submits the forward message action, we first check if there is a message to forward and if any rooms have been selected. 
+    // If both conditions are met, we iterate over the selected rooms and send the message content to each room via the WebSocket using the SocketService. 
+    // After sending the messages, we reset the forwarding state and close the forward modal.
     for (const roomId of this.selectedForwardRooms) {
       this.socketService.send({
         roomId,
@@ -1606,6 +1729,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.viewingUserProfile = null;
   }
 
+  // getRoomInitials: this method is called to generate the initials for a chat room based on its name, 
+  // which can be used for display purposes when the room does not have an avatar image.
   getRoomInitials(name: string): string {
     if (!name) return 'RM';
     return (
@@ -1617,6 +1742,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
+  // updateRoomLastMessage: this method is called to update the last message preview for a specific room in the sidebar.
   private updateRoomLastMessage(roomId: string, message: string) {
     this.rooms = this.rooms.map((room: any) => {
       const currentRoomId = room.roomId || room.id;
@@ -1646,6 +1772,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  // getSidebarMessagePreview: this method is called to generate a preview string for the last message in a room, 
+  // which is displayed in the sidebar.
   private getSidebarMessagePreview(message: any): string {
     if (!message?.content) {
       return 'No messages yet';

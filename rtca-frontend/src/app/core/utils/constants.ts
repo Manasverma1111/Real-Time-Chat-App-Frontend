@@ -1,3 +1,5 @@
+// CONSTANTS: this file contains constant values that are used throughout the application, 
+// such as color codes for different user statuses.
 export const COLORS = {
   primary: '#5B5EA6',
   primaryLight: '#EEEDFE',

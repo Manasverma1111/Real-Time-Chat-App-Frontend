@@ -18,7 +18,6 @@ export class ApiService {
   }
 
   /*
-   FINAL FIX:
    Added PUT method for markMessagesAsSeen()
    and future update APIs
   */
@@ -34,6 +33,7 @@ export class ApiService {
     return this.http.delete<T>(`${this.BASE_URL}${url}`);
   }
 
+  // FILE UPLOAD WITH PROGRESS
   uploadFile(url: string, formData: FormData) {
     return this.http.post(`${this.BASE_URL}${url}`, formData);
   }

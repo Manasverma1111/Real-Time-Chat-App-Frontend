@@ -7,6 +7,9 @@ import { Router } from '@angular/router';
 import { isSuperAdmin } from '../../../core/utils/auth.util';
 import { NotificationService } from '../../../core/services/notification.service';
 
+// SIDEBAR COMPONENT: this component provides the user interface for the sidebar of the chat application. 
+// It displays the list of chat rooms, a search bar for filtering rooms, and buttons for creating new chats, 
+// accessing the admin panel (for super admins), viewing the user profile, and logging out.
 @Component({
   selector: 'app-sidebar',
   standalone: true,
@@ -222,6 +225,8 @@ import { NotificationService } from '../../../core/services/notification.service
   ],
 })
 export class SidebarComponent {
+
+  // INPUTS FOR ROOMS, USER INFO, AND NOTIFICATIONS
   @Input() rooms: any[] = [];
   @Input() selectedRoom: any;
   @Input() loadingRooms: boolean = false;
@@ -229,6 +234,7 @@ export class SidebarComponent {
   @Input() notifications: any[] = [];
   @Input() unreadCount: number = 0;
 
+  // OUTPUT EVENTS FOR USER ACTIONS IN THE SIDEBAR
   @Output() selectRoom = new EventEmitter<any>();
   @Output() logout = new EventEmitter<void>();
   @Output() createRoom = new EventEmitter<void>();
@@ -243,6 +249,9 @@ export class SidebarComponent {
     private notificationService: NotificationService,
   ) {}
 
+  // filteredRooms: this computed property filters the list of rooms based on the search input. 
+  // If the search input is empty, it returns the full list of rooms. 
+  // Otherwise, it filters the rooms to include only those whose names contain the search string (case-insensitive).
   get filteredRooms() {
     if (!this.search.trim()) return this.rooms;
     return this.rooms.filter((r) => r.name.toLowerCase().includes(this.search.toLowerCase()));
@@ -260,31 +269,52 @@ export class SidebarComponent {
       .length;
   }
 
+  // handleSelect: this method is called when the user clicks on a room in the sidebar. 
+  // It emits the selectRoom event with the room information, 
+  // allowing the parent component to handle the room selection and display the corresponding chat window.
   handleSelect(room: any) {
     this.selectRoom.emit(room);
   }
 
+  // handleLogout: this method is called when the user clicks on the logout button in the sidebar. 
+  // It emits the logout event to notify the parent component (ChatComponent) to perform the logout action, 
+  // which typically involves clearing user data, tokens, and redirecting to the login page.
   handleLogout() {
-    // ✅ delegate logout to parent (ChatComponent)
+    // delegate logout to parent (ChatComponent)
     this.logout.emit();
   }
 
+  // handleCreateRoom: this method is called when the user clicks on the "New Chat" button in the sidebar. 
+  // It emits the createRoom event to notify the parent component (ChatComponent) to open the room creation modal or page, 
+  // allowing the user to create a new chat room.
   handleCreateRoom() {
     this.createRoom.emit();
   }
 
+  // goToAdmin: this method is called when the user clicks on the admin panel button in the sidebar. 
+  // It uses the Angular Router to navigate the user to the '/admin' route, which is where the admin panel is located. 
+  // This allows users with admin privileges to access the admin features of the application.
   goToAdmin() {
     this.router.navigate(['/admin']);
   }
 
+  // isAdmin: this computed property checks if the current user has super admin privileges by calling the isSuperAdmin function from the auth utility. 
+  // It is used in the template to conditionally display admin-only features or options in the sidebar, 
+  // such as access to the admin panel or user management.
   get isAdmin() {
     return isSuperAdmin();
   }
 
+  // handleOpenProfile: this method is called when the user clicks on the profile button in the sidebar. 
+  // It emits the openProfile event to notify the parent component (ChatComponent) to open the user's profile page or panel, 
+  // allowing the user to view and edit their profile information.
   handleJoinGroup(room: any) {
     this.joinGroup.emit(room);
   }
 
+  // handleOpenNotifications: this method is called when the user clicks on the notifications button in the sidebar. 
+  // It emits the openNotifications event to notify the parent component (ChatComponent) to open the notifications panel 
+  // or page, allowing the user to view their notifications.
   handleOpenNotifications() {
     this.openNotifications.emit();
   }

@@ -1,3 +1,4 @@
+<!-- input component -->
 <div class="input-wrapper">
   <input [type]="inputType" [formControl]="control" [placeholder]="placeholder || ''" />
 
@@ -6,28 +7,10 @@
   </button>
 </div>
 
+<!-- error message -->
 <p
   *ngIf="error"
   style="font-size: 12px; color: #b91c1c; margin-top: 4px; font-family: 'DM Sans', sans-serif"
 >
   {{ error }}
 </p>
-
-<!-- <div style="margin-bottom: 14px">
-  <label *ngIf="label">{{ label }}</label>
-
-  <div class="input-wrapper">
-    <input [type]="inputType" [formControl]="control" [placeholder]="placeholder" />
-
-    <button
-      *ngIf="type === 'password'"
-      type="button"
-      (click)="showPass = !showPass"
-      class="eye-btn"
-    >
-      {{ showPass ? '🙈' : '👁️' }}
-    </button>
-  </div>
-
-  <p *ngIf="error" style="color: red">{{ error }}</p>
-</div> -->
