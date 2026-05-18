@@ -1102,29 +1102,42 @@ export class ChatComponent implements OnInit, OnDestroy {
   handleLogout() {
     const userId = sessionStorage.getItem('userId');
 
-    this.socketService.disconnect();
-
     if (userId) {
+      /*
+     Mark offline FIRST so presence-service broadcasts
+     to /topic/presence while socket is still alive.
+     Other clients receive the event instantly.
+     Disconnect only after offline is confirmed.
+    */
       this.authService.markUserOffline(userId).subscribe({
-        next: () => {},
+        next: () => {
+          this.performLogout();
+        },
         error: (err) => {
           console.error('Failed to mark user offline', err);
+          this.performLogout();
         },
       });
+    } else {
+      this.performLogout();
     }
+  }
 
-    // after attempting to mark the user as offline, we proceed to log the user out by clearing session storage and navigating to the login page.
+  private performLogout() {
     this.authService.logout().subscribe({
       next: () => {
+        /*
+       Disconnect socket AFTER logout completes
+       so broadcast has time to reach other clients
+      */
+        this.socketService.disconnect();
         sessionStorage.removeItem('connecthub_token');
         sessionStorage.removeItem('userId');
         sessionStorage.removeItem('username');
         this.router.navigate(['/login']);
       },
-
-      // even if there is an error during the logout process,
-      // we still want to ensure that the user is logged out on the client side by clearing session storage and navigating to the login page.
       error: () => {
+        this.socketService.disconnect();
         sessionStorage.removeItem('connecthub_token');
         sessionStorage.removeItem('userId');
         sessionStorage.removeItem('username');
